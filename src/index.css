@@ -6,26 +6,20 @@
 
 @layer base {
   :root {
-    --background: 48 100% 94%;
-    --foreground: 200 20% 96%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
     --card: 0 0% 100%;
-    --card-foreground: 200 50% 96%;
+    --card-foreground: 0 0% 0%;
     --popover: 0 0% 100%;
-    --popover-foreground: 200 50% 96%;
-    --primary: 0 67% 67%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 120 33% 64%;
-    --secondary-foreground: 210 40% 98%;
-    --accent: 260 50% 55%;
-    --accent-foreground: 210 40% 98%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.75rem;
+    --popover-foreground: 0 0% 0%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 100%;
+    --secondary-foreground: 0 0% 0%;
+    --border: 0 0% 90%;
+    --input: 0 0% 96%;
+    --ring: 0 0% 0%;
+    --radius: 1rem;
   }
 
   * {
@@ -33,12 +27,12 @@
   }
 
   body {
-    @apply bg-background text-text-primary font-sans antialiased;
-    font-family: 'Work Sans', sans-serif;
+    @apply bg-background text-text-primary antialiased;
+    font-family: 'Inter', sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Work Sans', sans-serif;
   }
 }
 
@@ -48,15 +42,15 @@
   }
 
   .btn-primary {
-    @apply px-4 py-2 bg-primary text-white rounded-md transition-all duration-300 hover:bg-primary-dark focus:ring-2 focus:ring-primary-light focus:outline-none;
+    @apply px-4 py-2 bg-primary text-white rounded-md transition-all duration-300 hover:bg-primary-light focus:ring-2 focus:ring-primary focus:outline-none;
   }
 
   .btn-secondary {
-    @apply px-4 py-2 bg-secondary text-white rounded-md transition-all duration-300 hover:bg-secondary-dark focus:ring-2 focus:ring-secondary-light focus:outline-none;
+    @apply px-4 py-2 bg-secondary text-primary rounded-md border border-primary transition-all duration-300 hover:bg-secondary-dark focus:ring-2 focus:ring-primary focus:outline-none;
   }
 
   .input-field {
-    @apply w-full px-4 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-primary-light focus:outline-none transition-all duration-300;
+    @apply w-full px-4 py-2 border border-input rounded-md focus:ring-2 focus:ring-primary focus:outline-none transition-all duration-300;
   }
 
   .nav-link {
