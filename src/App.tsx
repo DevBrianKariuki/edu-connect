@@ -10,28 +10,32 @@ import StudentDetails from "./pages/students/[id]";
 import CalendarPage from "./pages/calendar";
 import StaffPage from "./pages/staff";
 import FinancePage from "./pages/finance";
+import { useState } from "react";
 
-const queryClient = new QueryClient();
+const App = () => {
+  // Move queryClient inside component to ensure React context is available
+  const [queryClient] = useState(() => new QueryClient());
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/students" element={<StudentsPage />} />
-            <Route path="/students/:id" element={<StudentDetails />} />
-            <Route path="/calendar" element={<CalendarPage />} />
-            <Route path="/staff" element={<StaffPage />} />
-            <Route path="/finance" element={<FinancePage />} />
-          </Routes>
-        </Layout>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/students" element={<StudentsPage />} />
+              <Route path="/students/:id" element={<StudentDetails />} />
+              <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/staff" element={<StaffPage />} />
+              <Route path="/finance" element={<FinancePage />} />
+            </Routes>
+          </Layout>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
