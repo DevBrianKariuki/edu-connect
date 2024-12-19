@@ -6,6 +6,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import Index from "./pages/Index";
 import StudentsPage from "./pages/students";
+import StudentDetails from "./pages/students/[id]";
+import CalendarPage from "./pages/calendar";
+import StaffPage from "./pages/staff";
+import FinancePage from "./pages/finance";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +23,10 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/students" element={<StudentsPage />} />
+            <Route path="/students/:id" element={<StudentDetails />} />
+            <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/staff" element={<StaffPage />} />
+            <Route path="/finance" element={<FinancePage />} />
           </Routes>
         </Layout>
       </BrowserRouter>

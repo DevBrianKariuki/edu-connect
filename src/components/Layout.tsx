@@ -1,6 +1,15 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LucideIcon, Home, Users, Calendar, BookOpen, Settings, LogOut } from "lucide-react";
+import { 
+  LucideIcon, 
+  Home, 
+  Users, 
+  Calendar, 
+  BookOpen, 
+  Settings, 
+  LogOut,
+  Wallet 
+} from "lucide-react";
 
 interface NavItemProps {
   icon: LucideIcon;
@@ -29,7 +38,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navItems = [
     { icon: Home, label: "Dashboard", path: "/" },
     { icon: Users, label: "Students", path: "/students" },
+    { icon: Users, label: "Staff", path: "/staff" },
     { icon: Calendar, label: "Calendar", path: "/calendar" },
+    { icon: Wallet, label: "Finance", path: "/finance" },
     { icon: BookOpen, label: "Academics", path: "/academics" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
