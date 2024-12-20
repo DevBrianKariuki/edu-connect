@@ -33,10 +33,17 @@ const StudentDetails = () => {
     classTeacherPhone: "+254712345678",
     gender: "Male",
     dateOfBirth: "2010-05-15",
-    parentName: "James Kamau",
-    parentPhone: "+254712345678",
     address: "123 Nairobi, Kenya",
     imageUrl: "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1",
+    parents: [
+      {
+        name: "James Kamau",
+        phone: "+254712345678",
+        email: "james.kamau@example.com",
+        nationalId: "12345678",
+        relationship: "Parent"
+      }
+    ]
   };
 
   const mockClasses = ["Grade 7", "Grade 8", "Grade 9"];
