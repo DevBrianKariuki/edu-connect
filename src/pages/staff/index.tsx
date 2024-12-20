@@ -14,6 +14,7 @@ interface StaffMember {
   phone: string;
   joinDate: string;
   status: 'active' | 'inactive';
+  imageUrl: string; // Added this line to resolve the TypeScript error
 }
 
 const mockStaffMembers: StaffMember[] = [
@@ -26,6 +27,7 @@ const mockStaffMembers: StaffMember[] = [
     phone: "+254 712 345 678",
     joinDate: "2023-01-15",
     status: "active",
+    imageUrl: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7", // Added a placeholder image URL
   },
   {
     id: "2",
@@ -36,6 +38,7 @@ const mockStaffMembers: StaffMember[] = [
     phone: "+254 723 456 789",
     joinDate: "2023-02-01",
     status: "active",
+    imageUrl: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7", // Added a placeholder image URL
   },
 ];
 
