@@ -1,6 +1,14 @@
 import React from "react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+import { Phone, Mail, MapPin, School, User, Calendar, Users } from "lucide-react";
+
+interface Parent {
+  name: string;
+  phone: string;
+  email: string;
+  nationalId: string;
+  relationship: string;
+}
 
 interface StudentProfileProps {
   student: {
@@ -12,98 +20,115 @@ interface StudentProfileProps {
     classTeacherPhone: string;
     gender: string;
     dateOfBirth: string;
-    parentName: string;
-    parentPhone: string;
     address: string;
     imageUrl: string;
+    parents: Parent[];
   };
 }
 
 const StudentProfile = ({ student }: StudentProfileProps) => {
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-48 h-64 rounded-lg overflow-hidden bg-gray-100">
-          {student.imageUrl ? (
-            <img
-              src={student.imageUrl}
-              alt={`${student.firstName} ${student.lastName}`}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-200">
-              <span className="text-4xl font-semibold text-gray-400">
-                {student.firstName[0]}
-                {student.lastName[0]}
-              </span>
+    <div className="max-w-4xl mx-auto">
+      <div className="grid md:grid-cols-3 gap-6">
+        {/* Left Column - Photo and Basic Info */}
+        <div className="md:col-span-1">
+          <Card className="overflow-hidden">
+            <div className="aspect-[3/4] relative">
+              {student.imageUrl ? (
+                <img
+                  src={student.imageUrl}
+                  alt={`${student.firstName} ${student.lastName}`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                  <User className="w-20 h-20 text-gray-400" />
+                </div>
+              )}
             </div>
-          )}
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-bold mb-2">
+                {student.firstName} {student.lastName}
+              </h2>
+              <p className="text-sm text-gray-500 mb-4">Student ID: {student.admissionNo}</p>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm">
+                  <School className="w-4 h-4" />
+                  <span>{student.class}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="w-4 h-4" />
+                  <span>{student.dateOfBirth}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Users className="w-4 h-4" />
+                  <span>{student.gender}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-        <h2 className="text-2xl font-bold">
-          {student.firstName} {student.lastName}
-        </h2>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
-            <dl className="space-y-2">
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Admission Number</dt>
-                <dd className="text-base">{student.admissionNo}</dd>
+        {/* Right Column - Details */}
+        <div className="md:col-span-2 space-y-6">
+          {/* Academic Information */}
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Academic Information</h3>
+              <div className="grid gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Class Teacher</label>
+                  <p className="mt-1">{student.classTeacher}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Teacher's Contact</label>
+                  <p className="mt-1 flex items-center gap-2">
+                    <Phone className="w-4 h-4" />
+                    {student.classTeacherPhone}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Address</label>
+                  <p className="mt-1 flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    {student.address}
+                  </p>
+                </div>
               </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Gender</dt>
-                <dd className="text-base">{student.gender}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Date of Birth</dt>
-                <dd className="text-base">{student.dateOfBirth}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Address</dt>
-                <dd className="text-base">{student.address}</dd>
-              </div>
-            </dl>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-semibold mb-4">Academic Information</h3>
-            <dl className="space-y-2">
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Class</dt>
-                <dd className="text-base">{student.class}</dd>
+          {/* Parents/Guardians Information */}
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Parents/Guardians</h3>
+              <div className="space-y-6">
+                {student.parents.map((parent, index) => (
+                  <div key={index} className="p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium">{parent.name}</h4>
+                      <span className="text-sm text-gray-500">{parent.relationship}</span>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4" />
+                        {parent.phone}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4" />
+                        {parent.email}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        ID: {parent.nationalId}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Class Teacher</dt>
-                <dd className="text-base">{student.classTeacher}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Teacher's Contact</dt>
-                <dd className="text-base">{student.classTeacherPhone}</dd>
-              </div>
-            </dl>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-semibold mb-4">Parent/Guardian Information</h3>
-            <dl className="space-y-2">
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Name</dt>
-                <dd className="text-base">{student.parentName}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Contact</dt>
-                <dd className="text-base">{student.parentPhone}</dd>
-              </div>
-            </dl>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
