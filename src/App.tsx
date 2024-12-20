@@ -11,10 +11,10 @@ import StudentDetails from "./pages/students/[id]";
 import CalendarPage from "./pages/calendar";
 import StaffPage from "./pages/staff";
 import FinancePage from "./pages/finance";
+import CommunicationPage from "./pages/communication";
 import { useState } from "react";
 
 const App = () => {
-  // Move queryClient inside component to ensure React context is available
   const [queryClient] = useState(() => new QueryClient());
 
   return (
@@ -31,6 +31,7 @@ const App = () => {
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/staff" element={<StaffPage />} />
               <Route path="/finance" element={<FinancePage />} />
+              <Route path="/communication" element={<CommunicationPage />} />
             </Routes>
           </Layout>
         </BrowserRouter>

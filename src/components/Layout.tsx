@@ -8,7 +8,8 @@ import {
   BookOpen, 
   Settings, 
   LogOut,
-  Wallet 
+  Wallet,
+  MessageSquare 
 } from "lucide-react";
 
 interface NavItemProps {
@@ -40,6 +41,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { icon: Users, label: "Students", path: "/students" },
     { icon: Users, label: "Staff", path: "/staff" },
     { icon: Calendar, label: "Calendar", path: "/calendar" },
+    { icon: MessageSquare, label: "Communication", path: "/communication" },
     { icon: Wallet, label: "Finance", path: "/finance" },
     { icon: BookOpen, label: "Academics", path: "/academics" },
     { icon: Settings, label: "Settings", path: "/settings" },
