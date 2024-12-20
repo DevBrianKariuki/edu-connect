@@ -10,6 +10,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import StudentFormDialog from "@/components/students/StudentFormDialog";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Student {
   id: string;
@@ -37,13 +39,16 @@ const mockStudents: Student[] = [
     gender: "Female",
     joinDate: "2024-01-16",
   },
-  // Add more mock data as needed
 ];
+
+const mockClasses = ["Grade 6", "Grade 7", "Grade 8"];
 
 const StudentsPage = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
+  const [isAddingStudent, setIsAddingStudent] = useState(false);
 
   const filteredStudents = mockStudents.filter(student => {
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -52,21 +57,31 @@ const StudentsPage = () => {
     return matchesSearch && matchesClass;
   });
 
-  const classes = Array.from(new Set(mockStudents.map(student => student.class)));
-
   const handleExport = (format: 'pdf' | 'csv' | 'xlsx') => {
     console.log(`Exporting as ${format}`);
-    // Implementation for export functionality would go here
+    toast({
+      title: "Export started",
+      description: `Exporting student list as ${format.toUpperCase()}`,
+    });
+  };
+
+  const handleAddStudent = (data: any) => {
+    console.log("Adding new student:", data);
+    toast({
+      title: "Student added",
+      description: "The new student has been successfully added.",
+    });
+    setIsAddingStudent(false);
   };
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6 animate-fadeIn">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold font-inter">Students</h1>
+        <h1 className="text-3xl font-bold">Students</h1>
         <div className="flex gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" className="bg-white hover:bg-gray-100">
                 <FileDown className="mr-2" size={16} />
                 Export
               </Button>
@@ -83,7 +98,7 @@ const StudentsPage = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button onClick={() => navigate("/students/new")}>
+          <Button onClick={() => setIsAddingStudent(true)} className="bg-primary text-white hover:bg-primary/90">
             <Plus size={20} className="mr-2" />
             Add Student
           </Button>
@@ -104,10 +119,10 @@ const StudentsPage = () => {
           <select
             value={selectedClass}
             onChange={(e) => setSelectedClass(e.target.value)}
-            className="input-field appearance-none pr-10"
+            className="h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none pr-10"
           >
             <option value="">All Classes</option>
-            {classes.map(className => (
+            {mockClasses.map(className => (
               <option key={className} value={className}>{className}</option>
             ))}
           </select>
@@ -115,7 +130,7 @@ const StudentsPage = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white rounded-lg shadow overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -145,6 +160,13 @@ const StudentsPage = () => {
           </TableBody>
         </Table>
       </div>
+
+      <StudentFormDialog
+        open={isAddingStudent}
+        onOpenChange={setIsAddingStudent}
+        onSubmit={handleAddStudent}
+        classes={mockClasses}
+      />
     </div>
   );
 };

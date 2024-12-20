@@ -1,60 +1,62 @@
 import React from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { ArrowLeft, Save, Trash, PenSquare } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-
-interface StudentFormData {
-  admissionNo: string;
-  firstName: string;
-  lastName: string;
-  class: string;
-  classTeacher: string;
-  classTeacherPhone: string;
-  gender: string;
-  dateOfBirth: string;
-  parentName: string;
-  parentPhone: string;
-  address: string;
-  imageUrl: string;
-}
+import { ArrowLeft, PenSquare, Trash } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import StudentProfile from "@/components/students/StudentProfile";
+import StudentFormDialog from "@/components/students/StudentFormDialog";
+import { useToast } from "@/components/ui/use-toast";
 
 const StudentDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isEditing, setIsEditing] = React.useState(false);
 
-  const form = useForm<StudentFormData>({
-    defaultValues: {
-      admissionNo: "2024001",
-      firstName: "John",
-      lastName: "Kamau",
-      class: "Grade 7",
-      classTeacher: "Mrs. Jane Doe",
-      classTeacherPhone: "+254712345678",
-      gender: "Male",
-      dateOfBirth: "2010-05-15",
-      parentName: "James Kamau",
-      parentPhone: "+254712345678",
-      address: "123 Nairobi, Kenya",
-      imageUrl: "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1",
-    },
-  });
-
-  const onSubmit = (data: StudentFormData) => {
-    console.log("Form submitted:", data);
-    setIsEditing(false);
+  // Mock data - replace with actual data fetching
+  const studentData = {
+    admissionNo: "2024001",
+    firstName: "John",
+    lastName: "Kamau",
+    class: "Grade 7",
+    classTeacher: "Mrs. Jane Doe",
+    classTeacherPhone: "+254712345678",
+    gender: "Male",
+    dateOfBirth: "2010-05-15",
+    parentName: "James Kamau",
+    parentPhone: "+254712345678",
+    address: "123 Nairobi, Kenya",
+    imageUrl: "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1",
   };
 
+  const mockClasses = ["Grade 7", "Grade 8", "Grade 9"];
+
   const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this student?")) {
-      console.log("Delete student:", id);
-      navigate("/students");
-    }
+    console.log("Delete student:", id);
+    toast({
+      title: "Student deleted",
+      description: "The student has been successfully deleted.",
+    });
+    navigate("/students");
+  };
+
+  const handleEdit = (data: typeof studentData) => {
+    console.log("Edit student:", data);
+    toast({
+      title: "Changes saved",
+      description: "The student information has been updated.",
+    });
+    setIsEditing(false);
   };
 
   return (
@@ -64,195 +66,52 @@ const StudentDetails = () => {
           <Link to="/students" className="text-muted-foreground hover:text-primary">
             <ArrowLeft size={24} />
           </Link>
-          <h1 className="text-2xl font-bold font-inter">Student Details</h1>
+          <h1 className="text-2xl font-bold">Student Details</h1>
         </div>
         <div className="flex gap-3">
-          {!isEditing && (
-            <Button variant="outline" onClick={() => setIsEditing(true)}>
-              <PenSquare className="mr-2" size={16} />
-              Edit
-            </Button>
-          )}
-          <Button variant="destructive" onClick={handleDelete}>
-            <Trash className="mr-2" size={16} />
-            Delete Student
+          <Button
+            variant="outline"
+            onClick={() => setIsEditing(true)}
+            className="bg-white hover:bg-gray-100"
+          >
+            <PenSquare className="mr-2" size={16} />
+            Edit
           </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" className="bg-red-600 hover:bg-red-700 text-white">
+                <Trash className="mr-2" size={16} />
+                Delete Student
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the student's record from
+                  the system.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="bg-white hover:bg-gray-100">Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
-      <div className="flex flex-col items-center gap-4 mb-8">
-        <Avatar className="w-32 h-32">
-          <AvatarImage src={form.getValues("imageUrl")} alt="Student photo" />
-          <AvatarFallback>
-            {form.getValues("firstName").charAt(0)}
-            {form.getValues("lastName").charAt(0)}
-          </AvatarFallback>
-        </Avatar>
-        <h2 className="text-xl font-semibold">
-          {form.getValues("firstName")} {form.getValues("lastName")}
-        </h2>
-      </div>
+      <StudentProfile student={studentData} />
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-              control={form.control}
-              name="admissionNo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Admission Number</FormLabel>
-                  <FormControl>
-                    <Input {...field} readOnly={!isEditing} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="class"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Class</FormLabel>
-                  <FormControl>
-                    <Input {...field} readOnly={!isEditing} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="classTeacher"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Class Teacher</FormLabel>
-                  <FormControl>
-                    <Input {...field} readOnly={!isEditing} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="classTeacherPhone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Class Teacher Phone</FormLabel>
-                  <FormControl>
-                    <Input {...field} readOnly={!isEditing} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="firstName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>First Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} readOnly={!isEditing} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="lastName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Last Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} readOnly={!isEditing} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="gender"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Gender</FormLabel>
-                  <FormControl>
-                    <Input {...field} readOnly={!isEditing} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="dateOfBirth"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date of Birth</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} readOnly={!isEditing} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="parentName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Parent/Guardian Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} readOnly={!isEditing} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="parentPhone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Parent/Guardian Phone</FormLabel>
-                  <FormControl>
-                    <Input {...field} readOnly={!isEditing} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Address</FormLabel>
-                  <FormControl>
-                    <Input {...field} readOnly={!isEditing} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
-
-          {isEditing && (
-            <div className="flex justify-end gap-3">
-              <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">
-                <Save className="mr-2" size={16} />
-                Save Changes
-              </Button>
-            </div>
-          )}
-        </form>
-      </Form>
+      <StudentFormDialog
+        open={isEditing}
+        onOpenChange={setIsEditing}
+        initialData={studentData}
+        onSubmit={handleEdit}
+        classes={mockClasses}
+      />
     </div>
   );
 };
