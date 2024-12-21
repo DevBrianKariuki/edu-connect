@@ -1,234 +1,271 @@
 import React from "react";
-import { useForm } from "react-hook-form";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+import { Label } from "@/components/ui/label";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
-interface StaffFormData {
-  name: string;
-  role: string;
-  department: string;
-  email: string;
-  phone: string;
-  joinDate: string;
-  imageUrl: string;
-}
+const staffFormSchema = z.object({
+	name: z.string().min(2, "Name must be at least 2 characters"),
+	email: z.string().email("Invalid email address"),
+	phone: z.string().min(10, "Phone number must be at least 10 digits"),
+	department: z.string().min(1, "Please select a department"),
+	role: z.string().min(1, "Please select a role"),
+	joinDate: z.string().min(1, "Join date is required"),
+	status: z.enum(["active", "inactive"]),
+});
+
+export type StaffFormData = z.infer<typeof staffFormSchema>;
 
 interface StaffFormDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  initialData?: StaffFormData;
-  onSubmit: (data: StaffFormData) => void;
-  departments: string[];
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+	onSubmit: (data: StaffFormData) => void;
+	initialData?: Partial<StaffFormData>;
 }
 
-const StaffFormDialog = ({
-  open,
-  onOpenChange,
-  initialData,
-  onSubmit,
-  departments,
-}: StaffFormDialogProps) => {
-  const [step, setStep] = React.useState(1);
-  const { toast } = useToast();
-  const form = useForm<StaffFormData>({
-    defaultValues: initialData || {
-      name: "",
-      role: "",
-      department: "",
-      email: "",
-      phone: "",
-      joinDate: "",
-      imageUrl: "",
-    },
-  });
+export function StaffFormDialog({
+	open,
+	onOpenChange,
+	onSubmit,
+	initialData,
+}: StaffFormDialogProps) {
+	const form = useForm<StaffFormData>({
+		resolver: zodResolver(staffFormSchema),
+		defaultValues: {
+			name: initialData?.name || "",
+			email: initialData?.email || "",
+			phone: initialData?.phone || "",
+			department: initialData?.department || "",
+			role: initialData?.role || "",
+			joinDate:
+				initialData?.joinDate || new Date().toISOString().split("T")[0],
+			status: initialData?.status || "active",
+		},
+	});
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.match(/^image\/(jpeg|jpg|png)$/)) {
-        toast({
-          title: "Invalid file type",
-          description: "Please upload only JPG, JPEG or PNG images",
-          variant: "destructive",
-        });
-        return;
-      }
-      form.setValue("imageUrl", URL.createObjectURL(file));
-    }
-  };
+	const handleSubmit = (data: StaffFormData) => {
+		onSubmit(data);
+		form.reset();
+	};
 
-  const nextStep = () => setStep((prev) => Math.min(prev + 1, 2));
-  const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent className="sm:max-w-[525px]">
+				<DialogHeader>
+					<DialogTitle className="text-2xl font-bold">
+						{initialData
+							? "Edit Staff Member"
+							: "Add New Staff Member"}
+					</DialogTitle>
+				</DialogHeader>
+				<Form {...form}>
+					<form
+						onSubmit={form.handleSubmit(handleSubmit)}
+						className="space-y-6">
+						<div className="grid grid-cols-2 gap-4">
+							<FormField
+								control={form.control}
+								name="name"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Full Name</FormLabel>
+										<FormControl>
+											<Input
+												placeholder="John Doe"
+												{...field}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name="email"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Email</FormLabel>
+										<FormControl>
+											<Input
+												placeholder="john@example.com"
+												{...field}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
 
-  const renderStep = () => {
-    switch (step) {
-      case 1:
-        return (
-          <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="imageUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Staff Photo</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="file"
-                      accept=".jpg,.jpeg,.png"
-                      onChange={handleImageChange}
-                      className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary/90"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Teacher">Teacher</SelectItem>
-                      <SelectItem value="Administrator">Administrator</SelectItem>
-                      <SelectItem value="Support Staff">Support Staff</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        );
-      case 2:
-        return (
-          <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="department"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Department</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select department" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {departments.map((dept) => (
-                        <SelectItem key={dept} value={dept}>
-                          {dept}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="joinDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Join Date</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
+						<div className="grid grid-cols-2 gap-4">
+							<FormField
+								control={form.control}
+								name="phone"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Phone Number</FormLabel>
+										<FormControl>
+											<Input
+												placeholder="+254 XXX XXX XXX"
+												{...field}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name="department"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Department</FormLabel>
+										<Select
+											onValueChange={field.onChange}
+											defaultValue={field.value}>
+											<FormControl>
+												<SelectTrigger>
+													<SelectValue placeholder="Select department" />
+												</SelectTrigger>
+											</FormControl>
+											<SelectContent>
+												<SelectItem value="Mathematics">
+													Mathematics
+												</SelectItem>
+												<SelectItem value="English">
+													English
+												</SelectItem>
+												<SelectItem value="Science">
+													Science
+												</SelectItem>
+												<SelectItem value="Social Studies">
+													Social Studies
+												</SelectItem>
+												<SelectItem value="Administration">
+													Administration
+												</SelectItem>
+											</SelectContent>
+										</Select>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>
-            {initialData ? "Edit Staff Member" : "Add New Staff Member"} - Step {step} of 2
-          </DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {renderStep()}
-            <div className="flex justify-between">
-              {step > 1 && (
-                <Button type="button" variant="outline" onClick={prevStep}>
-                  Previous
-                </Button>
-              )}
-              {step < 2 ? (
-                <Button type="button" onClick={nextStep} className="ml-auto">
-                  Next
-                </Button>
-              ) : (
-                <Button type="submit" className="ml-auto bg-primary text-white hover:bg-primary/90">
-                  {initialData ? "Save Changes" : "Add Staff Member"}
-                </Button>
-              )}
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
-  );
-};
+						<div className="grid grid-cols-2 gap-4">
+							<FormField
+								control={form.control}
+								name="role"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Role</FormLabel>
+										<Select
+											onValueChange={field.onChange}
+											defaultValue={field.value}>
+											<FormControl>
+												<SelectTrigger>
+													<SelectValue placeholder="Select role" />
+												</SelectTrigger>
+											</FormControl>
+											<SelectContent>
+												<SelectItem value="Teacher">
+													Teacher
+												</SelectItem>
+												<SelectItem value="Head of Department">
+													Head of Department
+												</SelectItem>
+												<SelectItem value="Administrator">
+													Administrator
+												</SelectItem>
+												<SelectItem value="Support Staff">
+													Support Staff
+												</SelectItem>
+											</SelectContent>
+										</Select>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name="joinDate"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Join Date</FormLabel>
+										<FormControl>
+											<Input type="date" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
 
-export default StaffFormDialog;
+						<FormField
+							control={form.control}
+							name="status"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Status</FormLabel>
+									<Select
+										onValueChange={field.onChange}
+										defaultValue={field.value}>
+										<FormControl>
+											<SelectTrigger>
+												<SelectValue placeholder="Select status" />
+											</SelectTrigger>
+										</FormControl>
+										<SelectContent>
+											<SelectItem value="active">
+												Active
+											</SelectItem>
+											<SelectItem value="inactive">
+												Inactive
+											</SelectItem>
+										</SelectContent>
+									</Select>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<div className="flex justify-end space-x-4">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => onOpenChange(false)}>
+								Cancel
+							</Button>
+							<Button type="submit">
+								{initialData ? "Update Staff" : "Add Staff"}
+							</Button>
+						</div>
+					</form>
+				</Form>
+			</DialogContent>
+		</Dialog>
+	);
+}

@@ -15,29 +15,41 @@ import CommunicationPage from "./pages/communication";
 import { useState } from "react";
 
 const App = () => {
-  const [queryClient] = useState(() => new QueryClient());
+	const [queryClient] = useState(() => new QueryClient());
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/students" element={<StudentsPage />} />
-              <Route path="/students/:id" element={<StudentDetails />} />
-              <Route path="/calendar" element={<CalendarPage />} />
-              <Route path="/staff" element={<StaffPage />} />
-              <Route path="/finance" element={<FinancePage />} />
-              <Route path="/communication" element={<CommunicationPage />} />
-            </Routes>
-          </Layout>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
+	return (
+		<QueryClientProvider client={queryClient}>
+			<TooltipProvider>
+				<Toaster />
+				<Sonner />
+				<BrowserRouter>
+					<Layout>
+						<Routes>
+							<Route path="/" element={<Index />} />
+							<Route
+								path="/students"
+								element={<StudentsPage />}
+							/>
+							<Route
+								path="/students/:id"
+								element={<StudentDetails />}
+							/>
+							<Route
+								path="/calendar"
+								element={<CalendarPage />}
+							/>
+							<Route path="/staff" element={<StaffPage />} />
+							<Route path="/finance" element={<FinancePage />} />
+							<Route
+								path="/communication"
+								element={<CommunicationPage />}
+							/>
+						</Routes>
+					</Layout>
+				</BrowserRouter>
+			</TooltipProvider>
+		</QueryClientProvider>
+	);
 };
 
 export default App;
