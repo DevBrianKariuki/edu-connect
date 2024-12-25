@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useAuth } from "@/lib/auth/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,40 +22,43 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
-import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+	AlertCircle,
+	ArrowLeft,
+	CheckCircle2,
+	Loader2,
+	Mail,
+} from "lucide-react";
+import { resetPassword } from "@/lib/firebase/auth";
 
-const loginSchema = z.object({
+const forgotPasswordSchema = z.object({
 	email: z.string().email("Invalid email address"),
-	password: z.string(),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
-export default function LoginPage() {
+export default function ForgotPasswordPage() {
 	const navigate = useNavigate();
-	const { login } = useAuth();
 	const { toast } = useToast();
 	const [isLoading, setIsLoading] = useState(false);
-	const [showPassword, setShowPassword] = useState(false);
+	const [resetSent, setResetSent] = useState(false);
 
-	const form = useForm<LoginFormData>({
-		resolver: zodResolver(loginSchema),
+	const form = useForm<ForgotPasswordFormData>({
+		resolver: zodResolver(forgotPasswordSchema),
 		defaultValues: {
 			email: "",
-			password: "",
 		},
 	});
 
-	const onSubmit = async (data: LoginFormData) => {
+	const onSubmit = async (data: ForgotPasswordFormData) => {
 		try {
 			setIsLoading(true);
-			await login({
-				email: data.email,
-				password: data.password,
-			});
+			await resetPassword(data.email);
+			setResetSent(true);
 			toast({
-				title: "Welcome back!",
-				description: "You have successfully logged in.",
+				title: "Reset Email Sent",
+				description: "Please check your email for the reset link.",
 				duration: 5000,
 				className: "bg-green-50 border-green-200",
 				action: (
@@ -66,11 +68,10 @@ export default function LoginPage() {
 					</div>
 				),
 			});
-			navigate("/dashboard");
 		} catch (error: any) {
 			toast({
-				title: "Login Failed",
-				description: error.message || "Failed to login",
+				title: "Failed to Send Reset Email",
+				description: error.message || "Please try again later",
 				variant: "destructive",
 				duration: 5000,
 				className: "bg-red-50 border-red-200 text-red-900",
@@ -81,19 +82,60 @@ export default function LoginPage() {
 					</div>
 				),
 			});
-			console.error("Login failed:", error);
+			console.error("Reset password failed:", error);
 		} finally {
 			setIsLoading(false);
 		}
 	};
 
+	if (resetSent) {
+		return (
+			<div className="flex items-center justify-center min-h-screen bg-background">
+				<Card className="w-[400px]">
+					<CardHeader>
+						<div className="flex items-center gap-2 mb-2">
+							<Mail className="h-5 w-5 text-green-500" />
+							<CardTitle>Check Your Email</CardTitle>
+						</div>
+						<CardDescription>
+							We've sent a password reset link to your email
+							address. Please check your inbox and follow the
+							instructions to reset your password.
+						</CardDescription>
+					</CardHeader>
+					<CardContent className="space-y-4">
+						<Alert className="bg-green-50 border-green-200 text-green-800">
+							<AlertTitle className="flex items-center gap-2">
+								<CheckCircle2 className="h-4 w-4" />
+								Reset Email Sent
+							</AlertTitle>
+							<AlertDescription>
+								If you don't see the email, please check your
+								spam folder.
+							</AlertDescription>
+						</Alert>
+						<div className="space-y-2">
+							<Button
+								className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+								onClick={() => navigate("/auth/login")}>
+								<ArrowLeft className="h-4 w-4" />
+								<span>Back to Login</span>
+							</Button>
+						</div>
+					</CardContent>
+				</Card>
+			</div>
+		);
+	}
+
 	return (
 		<div className="flex items-center justify-center min-h-screen bg-background">
 			<Card className="w-[400px]">
 				<CardHeader>
-					<CardTitle>Welcome Back</CardTitle>
+					<CardTitle>Reset Password</CardTitle>
 					<CardDescription>
-						Sign in to your account to continue
+						Enter your email address and we'll send you a link to
+						reset your password.
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -119,47 +161,6 @@ export default function LoginPage() {
 									</FormItem>
 								)}
 							/>
-							<FormField
-								control={form.control}
-								name="password"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Password</FormLabel>
-										<FormControl>
-											<div className="relative">
-												<Input
-													placeholder="Enter your password"
-													type={
-														showPassword
-															? "text"
-															: "password"
-													}
-													disabled={isLoading}
-													{...field}
-												/>
-												<Button
-													type="button"
-													variant="ghost"
-													size="sm"
-													className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-													onClick={() =>
-														setShowPassword(
-															!showPassword
-														)
-													}
-													tabIndex={-1}>
-													{showPassword ? (
-														<EyeOff className="h-4 w-4" />
-													) : (
-														<Eye className="h-4 w-4" />
-													)}
-												</Button>
-											</div>
-										</FormControl>
-										<FormMessage className="text-red-500" />
-									</FormItem>
-								)}
-							/>
 							<Button
 								type="submit"
 								className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
@@ -167,29 +168,23 @@ export default function LoginPage() {
 								{isLoading ? (
 									<>
 										<Loader2 className="h-4 w-4 animate-spin" />
-										<span>Signing in...</span>
+										<span>Sending reset link...</span>
 									</>
 								) : (
-									<span>Sign In</span>
+									<span>Send Reset Link</span>
 								)}
 							</Button>
 						</form>
 					</Form>
 				</CardContent>
 				<CardFooter className="flex flex-col space-y-4">
-					<Button
-						variant="link"
-						className="w-full text-primary hover:text-primary/80"
-						onClick={() => navigate("/auth/forgot-password")}>
-						Forgot your password?
-					</Button>
 					<div className="text-sm text-center text-muted-foreground">
-						Don't have an account?{" "}
+						Remember your password?{" "}
 						<Button
 							variant="link"
 							className="px-2 font-semibold text-primary hover:text-primary/80 hover:underline"
-							onClick={() => navigate("/auth/register")}>
-							Sign up
+							onClick={() => navigate("/auth/login")}>
+							Sign in
 						</Button>
 					</div>
 				</CardFooter>

@@ -1,21 +1,26 @@
-import React from "react";
+import { Outlet } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 
-interface LayoutProps {
-	children: React.ReactNode;
+export interface LayoutProps {
+	children?: React.ReactNode;
 }
 
-const Layout = ({ children }: LayoutProps) => {
+export default function Layout({ children }: LayoutProps) {
 	return (
-		<div className="relative flex min-h-screen">
-			<Sidebar />
-			<div className="flex-1">
+		<TooltipProvider>
+			<div className="min-h-screen bg-background">
 				<TopBar />
-				<main className="flex-1">{children}</main>
+				<div className="flex">
+					<Sidebar />
+					<main className="flex-1">{children || <Outlet />}</main>
+				</div>
 			</div>
-		</div>
+			<Toaster />
+			<Sonner />
+		</TooltipProvider>
 	);
-};
-
-export default Layout;
+}
