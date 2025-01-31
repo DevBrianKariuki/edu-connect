@@ -1,8 +1,9 @@
+
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth/AuthContext";
 import Layout from "@/components/Layout";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import LoginPage from "@/pages/auth/Login";
+import LoginPage from "@/pages/auth/login";
 import RegisterPage from "@/pages/auth/Register";
 import ForgotPasswordPage from "@/pages/auth/ForgotPassword";
 import ResetPasswordPage from "@/pages/auth/ResetPassword";
