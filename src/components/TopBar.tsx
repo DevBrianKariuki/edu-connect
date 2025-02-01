@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
 	Bell,
@@ -10,7 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
 	DropdownMenu,
@@ -21,6 +22,8 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { useToast } from "./ui/use-toast";
 
 const notifications = [
 	{
@@ -45,6 +48,26 @@ const notifications = [
 
 const TopBar = () => {
 	const [isSearchOpen, setIsSearchOpen] = useState(false);
+	const { logout, state } = useAuth();
+	const navigate = useNavigate();
+	const { toast } = useToast();
+
+	const handleLogout = async () => {
+		try {
+			await logout();
+			toast({
+				title: "Logged out successfully",
+				description: "You have been logged out of your account.",
+			});
+			navigate("/auth/login");
+		} catch (error: any) {
+			toast({
+				title: "Logout failed",
+				description: error.message,
+				variant: "destructive",
+			});
+		}
+	};
 
 	return (
 		<div className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -127,12 +150,14 @@ const TopBar = () => {
 								<Avatar className="h-8 w-8">
 									<AvatarImage
 										src="/avatars/admin.png"
-										alt="Admin"
+										alt={state.user?.name || "User"}
 									/>
-									<AvatarFallback>AD</AvatarFallback>
+									<AvatarFallback>
+										{state.user?.name?.charAt(0) || "U"}
+									</AvatarFallback>
 								</Avatar>
 								<span className="hidden md:inline-flex">
-									Admin
+									{state.user?.name || "User"}
 								</span>
 								<ChevronDown className="h-4 w-4 text-muted-foreground" />
 							</Button>
@@ -149,7 +174,9 @@ const TopBar = () => {
 								Settings
 							</DropdownMenuItem>
 							<DropdownMenuSeparator />
-							<DropdownMenuItem className="text-red-600">
+							<DropdownMenuItem
+								className="text-red-600"
+								onClick={handleLogout}>
 								<LogOut className="mr-2 h-4 w-4" />
 								Logout
 							</DropdownMenuItem>

@@ -46,6 +46,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 		);
 	}
 
+	// Only show admin verification if user is not already verified
 	if (!state.user?.adminVerified) {
 		return <AdminVerification />;
 	}
