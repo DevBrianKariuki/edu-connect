@@ -1,4 +1,3 @@
-
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth/AuthContext";
 import Layout from "@/components/Layout";
@@ -17,6 +16,9 @@ import FinancePage from "@/pages/finance";
 import NotFoundPage from "@/pages/404";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import AcademicsPage from "@/pages/academics";
+import CommunicationPage from "@/pages/communication";
+import StaffPage from "@/pages/staff";
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -134,6 +136,18 @@ export const router = createBrowserRouter([
 						],
 					},
 					{
+						path: "staff",
+						element: <StaffPage />,
+					},
+					{
+						path: "communication",
+						element: <CommunicationPage />,
+					},
+					{
+						path: "academics",
+						element: <AcademicsPage />,
+					},
+					{
 						path: "teachers",
 						element: <TeachersPage />,
 					},
@@ -144,6 +158,10 @@ export const router = createBrowserRouter([
 					{
 						path: "finance",
 						element: <FinancePage />,
+					},
+					{
+						path: "settings",
+						element: <SettingsPage />,
 					},
 				],
 			},
