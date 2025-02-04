@@ -20,6 +20,7 @@ import AcademicsPage from "@/pages/academics";
 import CommunicationPage from "@/pages/communication";
 import StaffPage from "@/pages/staff";
 import SettingsPage from "@/pages/settings";
+import TransportPage from "@/pages/transport";
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -163,6 +164,10 @@ export const router = createBrowserRouter([
 					{
 						path: "settings",
 						element: <SettingsPage />,
+					},
+					{
+						path: "transport",
+						element: <TransportPage />,
 					},
 				],
 			},
