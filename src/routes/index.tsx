@@ -19,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 import AcademicsPage from "@/pages/academics";
 import CommunicationPage from "@/pages/communication";
 import StaffPage from "@/pages/staff";
+import SettingsPage from "@/pages/settings";
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
