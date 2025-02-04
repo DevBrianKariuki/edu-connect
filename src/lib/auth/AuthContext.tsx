@@ -1,3 +1,4 @@
+```typescript
 import React, {
 	createContext,
 	useContext,
@@ -250,9 +251,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 	}, []);
 
 	useEffect(() => {
-		const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+		const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
 			if (firebaseUser) {
-				const user = mapFirebaseUser(firebaseUser);
+				const user = await mapFirebaseUser(firebaseUser);
 				dispatch({ type: "AUTH_STATE_CHANGED", payload: user });
 			} else {
 				dispatch({ type: "AUTH_STATE_CHANGED", payload: null });
@@ -283,3 +284,4 @@ export const useAuth = () => {
 	}
 	return context;
 };
+```

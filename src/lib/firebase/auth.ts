@@ -10,8 +10,9 @@ import {
 	User as FirebaseUser,
 	UserCredential,
 } from "firebase/auth";
-import { auth } from "./config";
+import { auth, db } from "./config";
 import { User } from "@/types/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 export async function signUp(
 	email: string,
@@ -37,6 +38,7 @@ export async function signUp(
 			isActive: true,
 			lastLogin: new Date(),
 			emailVerified: user.emailVerified,
+			adminVerified: false, // New users are not admin verified by default
 		};
 	} catch (error: any) {
 		throw new Error(error.message);
@@ -56,14 +58,19 @@ export async function signIn(email: string, password: string): Promise<User> {
 			throw new Error("Please verify your email before signing in.");
 		}
 
+		// Fetch user data from Firestore to get adminVerified status
+		const userDoc = await getDoc(doc(db, "users", user.uid));
+		const userData = userDoc.data();
+
 		return {
 			id: user.uid,
 			email: user.email!,
 			name: user.displayName || "User",
-			role: "student", // This should be fetched from Firestore in a real app
+			role: userData?.role || "student",
 			isActive: true,
 			lastLogin: new Date(),
 			emailVerified: user.emailVerified,
+			adminVerified: userData?.adminVerified || false,
 		};
 	} catch (error: any) {
 		throw new Error(error.message);
@@ -104,15 +111,20 @@ export function getCurrentUser(): FirebaseUser | null {
 }
 
 // Function to convert Firebase user to our User type
-export function mapFirebaseUser(firebaseUser: FirebaseUser): User {
+export async function mapFirebaseUser(firebaseUser: FirebaseUser): Promise<User> {
+	// Fetch user data from Firestore to get adminVerified status
+	const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+	const userData = userDoc.data();
+
 	return {
 		id: firebaseUser.uid,
 		email: firebaseUser.email!,
 		name: firebaseUser.displayName || "User",
-		role: "student", // This should be fetched from Firestore in a real app
+		role: userData?.role || "student",
 		isActive: true,
 		lastLogin: new Date(),
 		emailVerified: firebaseUser.emailVerified,
+		adminVerified: userData?.adminVerified || false,
 	};
 }
 
