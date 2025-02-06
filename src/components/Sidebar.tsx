@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
 	LucideIcon,
 	Home,
@@ -17,6 +17,8 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { useToast } from "./ui/use-toast";
 
 interface NavItemProps {
 	icon: LucideIcon;
@@ -53,6 +55,26 @@ const navItems = [
 
 const Sidebar = () => {
 	const location = useLocation();
+	const navigate = useNavigate();
+	const { logout } = useAuth();
+	const { toast } = useToast();
+
+	const handleLogout = async () => {
+		try {
+			await logout();
+			toast({
+				title: "Logged out successfully",
+				description: "You have been logged out of your account.",
+			});
+			navigate("/auth/login");
+		} catch (error: any) {
+			toast({
+				title: "Logout failed",
+				description: error.message,
+				variant: "destructive",
+			});
+		}
+	};
 
 	const renderNavContent = () => (
 		<>
@@ -76,7 +98,8 @@ const Sidebar = () => {
 			<div className="pt-6 mt-6 border-t px-4">
 				<Button
 					variant="ghost"
-					className="w-full justify-start space-x-3 text-red-500 hover:text-red-600 hover:bg-red-50">
+					className="w-full justify-start space-x-3 text-red-500 hover:text-red-600 hover:bg-red-50"
+					onClick={handleLogout}>
 					<LogOut size={20} />
 					<span className="font-medium">Logout</span>
 				</Button>

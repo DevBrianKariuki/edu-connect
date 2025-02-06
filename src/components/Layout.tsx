@@ -1,3 +1,4 @@
+
 import { Outlet } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -15,8 +16,12 @@ export default function Layout({ children }: LayoutProps) {
 			<div className="min-h-screen bg-background">
 				<TopBar />
 				<div className="flex">
-					<Sidebar />
-					<main className="flex-1">{children || <Outlet />}</main>
+					<div className="sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto">
+						<Sidebar />
+					</div>
+					<main className="flex-1 overflow-y-auto">
+						{children || <Outlet />}
+					</main>
 				</div>
 			</div>
 			<Toaster />

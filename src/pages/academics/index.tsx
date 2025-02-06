@@ -11,8 +11,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { BookOpen, GraduationCap, School } from "lucide-react";
+import ExamResults from "@/components/academics/ExamResults";
 
 const AcademicsPage = () => {
 	return (
@@ -23,7 +23,7 @@ const AcademicsPage = () => {
 						Academic Management
 					</h1>
 					<p className="text-muted-foreground">
-						Manage courses, classes, and academic resources
+						Manage courses, classes, and academic results
 					</p>
 				</div>
 			</div>
@@ -64,12 +64,18 @@ const AcademicsPage = () => {
 				</Card>
 			</div>
 
-			<Tabs defaultValue="courses" className="space-y-6">
+			<Tabs defaultValue="exams" className="space-y-6">
 				<TabsList className="bg-muted">
+					<TabsTrigger value="exams">Examinations</TabsTrigger>
 					<TabsTrigger value="courses">Courses</TabsTrigger>
 					<TabsTrigger value="classes">Classes</TabsTrigger>
-					<TabsTrigger value="exams">Examinations</TabsTrigger>
 				</TabsList>
+
+				<TabsContent value="exams" className="space-y-6">
+					<ExamResults examType="opener" />
+					<ExamResults examType="midterm" />
+					<ExamResults examType="endterm" />
+				</TabsContent>
 
 				<TabsContent value="courses" className="space-y-4">
 					<Card>
@@ -135,26 +141,6 @@ const AcademicsPage = () => {
 											</SelectItem>
 										</SelectContent>
 									</Select>
-								</div>
-							</div>
-						</CardContent>
-					</Card>
-				</TabsContent>
-
-				<TabsContent value="exams" className="space-y-4">
-					<Card>
-						<CardHeader>
-							<CardTitle>Examination Schedule</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-4">
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-								<div className="space-y-2">
-									<Label>Exam Title</Label>
-									<Input placeholder="Enter exam title" />
-								</div>
-								<div className="space-y-2">
-									<Label>Date</Label>
-									<Input type="date" />
 								</div>
 							</div>
 						</CardContent>
