@@ -12,6 +12,7 @@ import BusManagement from "@/components/transport/BusManagement";
 import DriversManagement from "@/components/transport/DriversManagement";
 import RoutesManagement from "@/components/transport/RoutesManagement";
 import LiveTracking from "@/components/transport/LiveTracking";
+import StudentsManagement from "@/components/transport/StudentsManagement";
 
 const TransportPage = () => {
 	return (
@@ -48,6 +49,7 @@ const TransportPage = () => {
 					<TabsTrigger value="buses">Buses</TabsTrigger>
 					<TabsTrigger value="drivers">Drivers</TabsTrigger>
 					<TabsTrigger value="routes">Routes</TabsTrigger>
+					<TabsTrigger value="students">Students</TabsTrigger>
 					<TabsTrigger value="tracking">Live Tracking</TabsTrigger>
 				</TabsList>
 				<TabsContent value="buses" className="mt-6">
@@ -58,6 +60,9 @@ const TransportPage = () => {
 				</TabsContent>
 				<TabsContent value="routes" className="mt-6">
 					<RoutesManagement />
+				</TabsContent>
+				<TabsContent value="students" className="mt-6">
+					<StudentsManagement />
 				</TabsContent>
 				<TabsContent value="tracking" className="mt-6">
 					<LiveTracking />
