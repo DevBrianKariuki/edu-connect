@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { getWeek, format } from "date-fns";
-import { utcToZonedTime } from "date-fns-tz";
+import { toZonedTime } from "date-fns-tz"; // Updated from utcToZonedTime to toZonedTime
 
 const InfoStrip = () => {
 	const [currentTime, setCurrentTime] = useState(new Date());
@@ -16,7 +16,7 @@ const InfoStrip = () => {
 	}, []);
 
 	const getNairobiTime = () => {
-		const nairobiTime = utcToZonedTime(currentTime, "Africa/Nairobi");
+		const nairobiTime = toZonedTime(currentTime, "Africa/Nairobi");
 		return format(nairobiTime, "hh:mm:ss aa");
 	};
 
