@@ -1,6 +1,8 @@
+
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth/AuthContext";
 import Layout from "@/components/Layout";
+import ParentLayout from "@/components/ParentLayout";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import LoginPage from "@/pages/auth/login";
 import RegisterPage from "@/pages/auth/Register";
@@ -8,6 +10,7 @@ import ForgotPasswordPage from "@/pages/auth/ForgotPassword";
 import ResetPasswordPage from "@/pages/auth/ResetPassword";
 import AdminVerification from "@/components/auth/AdminVerification";
 import DashboardPage from "@/pages/dashboard";
+import ParentDashboardPage from "@/pages/parent-portal/dashboard";
 import StudentsPage from "@/pages/students";
 import StudentDetails from "@/pages/students/[id]";
 import TeachersPage from "@/pages/teachers";
@@ -50,21 +53,25 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 		);
 	}
 
-	// Only show admin verification if user is not already verified
-	if (!state.user?.adminVerified) {
+	// Only show admin verification if user is not already verified and is an admin
+	if (!state.user?.adminVerified && state.user?.role === "admin") {
 		return <AdminVerification />;
 	}
 
 	return <>{children}</>;
 };
 
-// Public Route wrapper component (redirects to dashboard if already authenticated)
+// Public Route wrapper component (redirects to appropriate dashboard if already authenticated)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 	const { state } = useAuth();
 	const navigate = useNavigate();
 
 	if (state.isAuthenticated && state.user?.emailVerified) {
-		return <Navigate to="/dashboard" replace />;
+		return state.user.role === "parent" ? (
+			<Navigate to="/parent" replace />
+		) : (
+			<Navigate to="/dashboard" replace />
+		);
 	}
 
 	return <>{children}</>;
@@ -87,14 +94,6 @@ export const router = createBrowserRouter([
 						element: (
 							<PublicRoute>
 								<LoginPage />
-							</PublicRoute>
-						),
-					},
-					{
-						path: "register",
-						element: (
-							<PublicRoute>
-								<RegisterPage />
 							</PublicRoute>
 						),
 					},
@@ -168,6 +167,49 @@ export const router = createBrowserRouter([
 					{
 						path: "transport",
 						element: <TransportPage />,
+					},
+				],
+			},
+			{
+				path: "parent",
+				element: (
+					<ProtectedRoute>
+						<ParentLayout />
+					</ProtectedRoute>
+				),
+				children: [
+					{
+						index: true,
+						element: <ParentDashboardPage />,
+					},
+					// Parent portal routes will be added here
+					{
+						path: "academics",
+						element: <div>Academic Progress</div>,
+					},
+					{
+						path: "attendance",
+						element: <div>Attendance</div>,
+					},
+					{
+						path: "calendar",
+						element: <CalendarPage />,
+					},
+					{
+						path: "messages",
+						element: <div>Messages</div>,
+					},
+					{
+						path: "reports",
+						element: <div>Reports</div>,
+					},
+					{
+						path: "fees",
+						element: <div>Fees</div>,
+					},
+					{
+						path: "settings",
+						element: <SettingsPage />,
 					},
 				],
 			},
