@@ -56,19 +56,21 @@ const mockStudents: TransportStudent[] = [
 
 const StudentsManagement = () => {
 	const [showAddStudentDialog, setShowAddStudentDialog] = useState(false);
-	const [selectedClass, setSelectedClass] = useState<string>("");
-	const [selectedRoute, setSelectedRoute] = useState<string>("");
-	const [selectedBus, setSelectedBus] = useState<string>("");
+	const [selectedClass, setSelectedClass] = useState<string>("all-classes");
+	const [selectedRoute, setSelectedRoute] = useState<string>("all-routes");
+	const [selectedBus, setSelectedBus] = useState<string>("all-buses");
 	const [searchQuery, setSearchQuery] = useState<string>("");
 
 	const filteredStudents = mockStudents.filter((student) => {
-		const matchesClass = selectedClass
-			? student.class === selectedClass
-			: true;
-		const matchesRoute = selectedRoute
-			? student.route === selectedRoute
-			: true;
-		const matchesBus = selectedBus ? student.bus === selectedBus : true;
+		const matchesClass = selectedClass === "all-classes"
+			? true
+			: student.class === selectedClass;
+		const matchesRoute = selectedRoute === "all-routes"
+			? true
+			: student.route === selectedRoute;
+		const matchesBus = selectedBus === "all-buses"
+			? true
+			: student.bus === selectedBus;
 		const matchesSearch = searchQuery
 			? student.name
 					.toLowerCase()
@@ -106,7 +108,7 @@ const StudentsManagement = () => {
 							<SelectValue placeholder="Filter by class" />
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value="">All Classes</SelectItem>
+							<SelectItem value="all-classes">All Classes</SelectItem>
 							<SelectItem value="Grade 5">Grade 5</SelectItem>
 							<SelectItem value="Grade 6">Grade 6</SelectItem>
 							<SelectItem value="Grade 7">Grade 7</SelectItem>
@@ -122,7 +124,7 @@ const StudentsManagement = () => {
 							<SelectValue placeholder="Filter by route" />
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value="">All Routes</SelectItem>
+							<SelectItem value="all-routes">All Routes</SelectItem>
 							<SelectItem value="Route A">Route A</SelectItem>
 							<SelectItem value="Route B">Route B</SelectItem>
 						</SelectContent>
@@ -134,7 +136,7 @@ const StudentsManagement = () => {
 							<SelectValue placeholder="Filter by bus" />
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value="">All Buses</SelectItem>
+							<SelectItem value="all-buses">All Buses</SelectItem>
 							<SelectItem value="KCB 123X">KCB 123X</SelectItem>
 							<SelectItem value="KDG 456Y">KDG 456Y</SelectItem>
 						</SelectContent>
