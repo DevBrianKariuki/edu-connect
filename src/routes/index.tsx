@@ -1,4 +1,3 @@
-
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth/AuthContext";
 import Layout from "@/components/Layout";
@@ -24,6 +23,8 @@ import CommunicationPage from "@/pages/communication";
 import StaffPage from "@/pages/staff";
 import SettingsPage from "@/pages/settings";
 import TransportPage from "@/pages/transport";
+import OnboardingPage from "@/pages/onboarding";
+import OnboardingCheck from "@/components/auth/OnboardingCheck";
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -130,57 +131,62 @@ export const router = createBrowserRouter([
 				),
 				children: [
 					{
-						index: true,
-						element: <Navigate to="/dashboard" replace />,
-					},
-					{
-						path: "dashboard",
-						element: <DashboardPage />,
-					},
-					{
-						path: "students",
+						element: <OnboardingCheck />,
 						children: [
 							{
 								index: true,
-								element: <StudentsPage />,
+								element: <Navigate to="/dashboard" replace />,
 							},
 							{
-								path: ":id",
-								element: <StudentDetails />,
+								path: "dashboard",
+								element: <DashboardPage />,
+							},
+							{
+								path: "students",
+								children: [
+									{
+										index: true,
+										element: <StudentsPage />,
+									},
+									{
+										path: ":id",
+										element: <StudentDetails />,
+									},
+								],
+							},
+							{
+								path: "staff",
+								element: <StaffPage />,
+							},
+							{
+								path: "communication",
+								element: <CommunicationPage />,
+							},
+							{
+								path: "academics",
+								element: <AcademicsPage />,
+							},
+							{
+								path: "teachers",
+								element: <TeachersPage />,
+							},
+							{
+								path: "calendar",
+								element: <CalendarPage />,
+							},
+							{
+								path: "finance",
+								element: <FinancePage />,
+							},
+							{
+								path: "settings",
+								element: <SettingsPage />,
+							},
+							{
+								path: "transport",
+								element: <TransportPage />,
 							},
 						],
-					},
-					{
-						path: "staff",
-						element: <StaffPage />,
-					},
-					{
-						path: "communication",
-						element: <CommunicationPage />,
-					},
-					{
-						path: "academics",
-						element: <AcademicsPage />,
-					},
-					{
-						path: "teachers",
-						element: <TeachersPage />,
-					},
-					{
-						path: "calendar",
-						element: <CalendarPage />,
-					},
-					{
-						path: "finance",
-						element: <FinancePage />,
-					},
-					{
-						path: "settings",
-						element: <SettingsPage />,
-					},
-					{
-						path: "transport",
-						element: <TransportPage />,
 					},
 				],
 			},
@@ -226,6 +232,14 @@ export const router = createBrowserRouter([
 						element: <SettingsPage />,
 					},
 				],
+			},
+			{
+				path: "onboarding",
+				element: (
+					<ProtectedRoute>
+						<OnboardingPage />
+					</ProtectedRoute>
+				),
 			},
 			{
 				path: "*",

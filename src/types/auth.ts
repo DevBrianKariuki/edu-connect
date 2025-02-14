@@ -1,4 +1,3 @@
-
 export type UserRole = "admin" | "teacher" | "student" | "parent" | "staff";
 
 export interface User {
@@ -11,7 +10,8 @@ export interface User {
     lastLogin?: Date;
     emailVerified: boolean;
     adminVerified: boolean;
-    admissionNumber?: string; // Added for parent login
+    admissionNumber?: string;
+    onboardingCompleted?: boolean;
 }
 
 export interface AuthResponse {
@@ -23,7 +23,7 @@ export interface LoginCredentials {
     email: string;
     password: string;
     role?: UserRole;
-    admissionNumber?: string; // Added for parent login
+    admissionNumber?: string;
 }
 
 export interface ParentLoginCredentials {
