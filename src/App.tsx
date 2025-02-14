@@ -8,27 +8,26 @@ import { router } from "@/routes";
 import { ThemeProvider } from "@/components/theme-provider";
 
 function App() {
-	const queryClient = new QueryClient({
-		defaultOptions: {
-			queries: {
-				refetchOnWindowFocus: false,
-				retry: false,
-			},
-		},
-	});
+    const queryClient = new QueryClient({
+        defaultOptions: {
+            queries: {
+                refetchOnWindowFocus: false,
+                retry: false,
+            },
+        },
+    });
 
-	return (
-		<ThemeProvider defaultTheme="dark" storageKey="edu-connect-theme">
-			<QueryClientProvider client={queryClient}>
-				<AuthProvider>
-					<RouterProvider router={router} />
-					<Toaster />
-					<Sonner />
-				</AuthProvider>
-			</QueryClientProvider>
-		</ThemeProvider>
-	);
+    return (
+        <ThemeProvider defaultTheme="dark" storageKey="edu-connect-theme">
+            <QueryClientProvider client={queryClient}>
+                <AuthProvider>
+                    <RouterProvider router={router} />
+                    <Toaster />
+                    <Sonner />
+                </AuthProvider>
+            </QueryClientProvider>
+        </ThemeProvider>
+    );
 }
 
 export default App;
-
