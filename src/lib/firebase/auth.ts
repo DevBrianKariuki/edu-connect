@@ -12,7 +12,7 @@ import {
 } from "firebase/auth";
 import { auth, db } from "./config";
 import { User } from "@/types/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 
 export async function signUp(
 	email: string,
@@ -24,21 +24,18 @@ export async function signUp(
 			await createUserWithEmailAndPassword(auth, email, password);
 		const user = userCredential.user;
 
-		// Update the user's profile with their name
 		await updateProfile(user, { displayName: name });
-
-		// Send email verification
 		await sendEmailVerification(user);
 
 		return {
 			id: user.uid,
 			email: user.email!,
 			name: name,
-			role: "student", // Default role, can be changed by admin
+			role: "student",
 			isActive: true,
 			lastLogin: new Date(),
 			emailVerified: user.emailVerified,
-			adminVerified: false, // New users are not admin verified by default
+			adminVerified: false,
 		};
 	} catch (error: any) {
 		throw new Error(error.message);
@@ -58,7 +55,6 @@ export async function signIn(email: string, password: string): Promise<User> {
 			throw new Error("Please verify your email before signing in.");
 		}
 
-		// Fetch user data from Firestore to get adminVerified status
 		const userDoc = await getDoc(doc(db, "users", user.uid));
 		const userData = userDoc.data();
 
@@ -71,6 +67,54 @@ export async function signIn(email: string, password: string): Promise<User> {
 			lastLogin: new Date(),
 			emailVerified: user.emailVerified,
 			adminVerified: userData?.adminVerified || false,
+			admissionNumber: userData?.admissionNumber,
+		};
+	} catch (error: any) {
+		throw new Error(error.message);
+	}
+}
+
+export async function parentSignIn(admissionNumber: string, password: string): Promise<User> {
+	try {
+		const studentsRef = collection(db, "students");
+		const q = query(studentsRef, where("admissionNumber", "==", admissionNumber));
+		const querySnapshot = await getDocs(q);
+
+		if (querySnapshot.empty) {
+			throw new Error("Invalid admission number");
+		}
+
+		const studentData = querySnapshot.docs[0].data();
+		const parentEmail = studentData.parentEmail;
+
+		if (!parentEmail) {
+			throw new Error("No parent email associated with this admission number");
+		}
+
+		const userCredential = await signInWithEmailAndPassword(
+			auth,
+			parentEmail,
+			password
+		);
+		const user = userCredential.user;
+
+		const userDoc = await getDoc(doc(db, "users", user.uid));
+		const userData = userDoc.data();
+
+		if (userData?.role !== "parent") {
+			throw new Error("Invalid parent credentials");
+		}
+
+		return {
+			id: user.uid,
+			email: user.email!,
+			name: user.displayName || studentData.parentName || "Parent",
+			role: "parent",
+			isActive: true,
+			lastLogin: new Date(),
+			emailVerified: true,
+			adminVerified: true,
+			admissionNumber: admissionNumber,
 		};
 	} catch (error: any) {
 		throw new Error(error.message);
@@ -110,9 +154,7 @@ export function getCurrentUser(): FirebaseUser | null {
 	return auth.currentUser;
 }
 
-// Function to convert Firebase user to our User type
 export async function mapFirebaseUser(firebaseUser: FirebaseUser): Promise<User> {
-	// Fetch user data from Firestore to get adminVerified status
 	const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
 	const userData = userDoc.data();
 
