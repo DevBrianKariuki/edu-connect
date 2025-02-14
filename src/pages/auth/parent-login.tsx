@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -35,7 +34,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function ParentLoginPage() {
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { parentLogin } = useAuth();
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -51,10 +50,9 @@ export default function ParentLoginPage() {
     const onSubmit = async (data: LoginFormData) => {
         try {
             setIsLoading(true);
-            await login({
+            await parentLogin({
                 admissionNumber: data.admissionNumber,
                 password: data.password,
-                role: "parent",
             });
             toast({
                 title: "Welcome back!",
