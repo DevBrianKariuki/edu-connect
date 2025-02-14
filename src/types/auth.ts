@@ -1,3 +1,4 @@
+
 export type UserRole = "admin" | "teacher" | "student" | "parent" | "staff";
 
 export interface User {
@@ -20,6 +21,7 @@ export interface AuthResponse {
 export interface LoginCredentials {
 	email: string;
 	password: string;
+	role?: UserRole; // Added role as an optional property
 }
 
 export interface AuthState {
