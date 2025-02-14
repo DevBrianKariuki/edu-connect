@@ -5,7 +5,7 @@ import Layout from "@/components/Layout";
 import ParentLayout from "@/components/ParentLayout";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import LoginPage from "@/pages/auth/login";
-import RegisterPage from "@/pages/auth/Register";
+import ParentLoginPage from "@/pages/auth/parent-login";
 import ForgotPasswordPage from "@/pages/auth/ForgotPassword";
 import ResetPasswordPage from "@/pages/auth/ResetPassword";
 import AdminVerification from "@/components/auth/AdminVerification";
@@ -31,7 +31,14 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 	const navigate = useNavigate();
 
 	if (!state.isAuthenticated) {
-		return <Navigate to="/auth/login" replace />;
+		// Redirect to appropriate login page based on the URL
+		const isParentRoute = window.location.pathname.startsWith("/parent");
+		return (
+			<Navigate
+				to={isParentRoute ? "/auth/parent-login" : "/auth/login"}
+				replace
+			/>
+		);
 	}
 
 	if (!state.user?.emailVerified) {
@@ -64,7 +71,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 // Public Route wrapper component (redirects to appropriate dashboard if already authenticated)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 	const { state } = useAuth();
-	const navigate = useNavigate();
 
 	if (state.isAuthenticated && state.user?.emailVerified) {
 		return state.user.role === "parent" ? (
@@ -94,6 +100,14 @@ export const router = createBrowserRouter([
 						element: (
 							<PublicRoute>
 								<LoginPage />
+							</PublicRoute>
+						),
+					},
+					{
+						path: "parent-login",
+						element: (
+							<PublicRoute>
+								<ParentLoginPage />
 							</PublicRoute>
 						),
 					},

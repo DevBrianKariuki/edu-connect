@@ -1,11 +1,10 @@
 
 import React, { useState, useEffect } from "react";
 import { getWeek, format } from "date-fns";
-import { toZonedTime } from "date-fns-tz"; // Updated from utcToZonedTime to toZonedTime
+import { toZonedTime } from "date-fns-tz";
 
 const InfoStrip = () => {
 	const [currentTime, setCurrentTime] = useState(new Date());
-	const [quote, setQuote] = useState("Success is not final, failure is not fatal: it is the courage to continue that counts.");
 
 	useEffect(() => {
 		const timer = setInterval(() => {
@@ -31,6 +30,10 @@ const InfoStrip = () => {
 		return "Term 3";
 	};
 
+	const getFormattedDate = () => {
+		return format(currentTime, "EEEE, do MMMM yyyy");
+	};
+
 	return (
 		<div className="bg-primary/5 py-2 px-4 flex items-center justify-between text-sm border-b">
 			<div className="flex items-center space-x-8">
@@ -47,9 +50,8 @@ const InfoStrip = () => {
 					<span>{getCurrentTerm()}</span>
 				</div>
 			</div>
-			<div className="flex items-center max-w-xl">
-				<span className="font-medium mr-2">Theme:</span>
-				<span className="italic">{quote}</span>
+			<div className="flex items-center">
+				<span>{getFormattedDate()}</span>
 			</div>
 		</div>
 	);

@@ -78,11 +78,6 @@ const Sidebar = () => {
 
 	const renderNavContent = () => (
 		<>
-			<div className="flex items-center space-x-3 px-4">
-				<div className="w-8 h-8 bg-primary rounded-lg"></div>
-				<h1 className="text-xl font-bold">EduConnect</h1>
-			</div>
-
 			<nav className="space-y-1 mt-6">
 				{navItems.map((item) => (
 					<NavItem
