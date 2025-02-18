@@ -1,4 +1,3 @@
-
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth/AuthContext";
 import Layout from "@/components/Layout";
@@ -29,7 +28,7 @@ import OnboardingCheck from "@/components/auth/OnboardingCheck";
 import { Outlet } from "react-router-dom";
 
 // Protected Route wrapper component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+const ProtectedRoute = ({ children, requireParent = false }: { children: React.ReactNode, requireParent?: boolean }) => {
     const { state } = useAuth();
     const navigate = useNavigate();
 
@@ -66,6 +65,16 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     // Only show admin verification if user is not already verified and is an admin
     if (!state.user?.adminVerified && state.user?.role === "admin") {
         return <AdminVerification />;
+    }
+
+    // Handle parent-specific route protection
+    if (requireParent && state.user?.role !== "parent") {
+        return <Navigate to="/dashboard" replace />;
+    }
+
+    // Prevent non-parent users from accessing parent routes
+    if (!requireParent && state.user?.role === "parent") {
+        return <Navigate to="/parent" replace />;
     }
 
     return <>{children}</>;
@@ -195,7 +204,7 @@ export const router = createBrowserRouter([
             {
                 path: "parent",
                 element: (
-                    <ProtectedRoute>
+                    <ProtectedRoute requireParent={true}>
                         <ParentLayout />
                     </ProtectedRoute>
                 ),
@@ -204,7 +213,6 @@ export const router = createBrowserRouter([
                         index: true,
                         element: <ParentDashboardPage />,
                     },
-                    // Parent portal routes will be added here
                     {
                         path: "academics",
                         element: <div>Academic Progress</div>,

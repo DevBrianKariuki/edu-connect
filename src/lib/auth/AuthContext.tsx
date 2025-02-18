@@ -19,6 +19,7 @@ import {
 import { db } from "@/lib/firebase/config";
 import { sendAdminVerificationEmail } from "@/lib/services/email";
 import { Timestamp } from "firebase/firestore";
+import { Navigate } from "react-router-dom";
 
 type AuthAction =
     | { type: "AUTH_STATE_CHANGED"; payload: User | null }
@@ -290,4 +291,16 @@ export const useAuth = () => {
         throw new Error("useAuth must be used within an AuthProvider");
     }
     return context;
+};
+
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+    const { state } = useAuth();
+
+    if (state.isAuthenticated && state.user?.emailVerified) {
+        // Redirect parent users to parent dashboard and other users to admin dashboard
+        const redirectPath = state.user.role === "parent" ? "/parent" : "/dashboard";
+        return <Navigate to={redirectPath} replace />;
+    }
+
+    return <>{children}</>;
 };
