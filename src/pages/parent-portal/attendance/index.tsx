@@ -110,7 +110,7 @@ const AttendancePage = () => {
                                             <Badge
                                                 variant={
                                                     record.status === "present"
-                                                        ? "success"
+                                                        ? "default"
                                                         : "destructive"
                                                 }
                                                 className="capitalize">

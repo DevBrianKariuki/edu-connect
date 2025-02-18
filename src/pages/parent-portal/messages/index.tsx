@@ -15,7 +15,7 @@ import {
     Send,
     Search,
     Phone,
-    VideoCamera,
+    Video,
     MoreVertical,
 } from "lucide-react";
 
@@ -166,7 +166,7 @@ const MessagesPage = () => {
                             <Phone className="h-5 w-5" />
                         </Button>
                         <Button variant="ghost" size="icon">
-                            <VideoCamera className="h-5 w-5" />
+                            <Video className="h-5 w-5" />
                         </Button>
                         <Button variant="ghost" size="icon">
                             <MoreVertical className="h-5 w-5" />
