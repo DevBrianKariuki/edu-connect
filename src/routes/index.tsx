@@ -26,6 +26,7 @@ import TransportPage from "@/pages/transport";
 import OnboardingPage from "@/pages/onboarding";
 import OnboardingCheck from "@/components/auth/OnboardingCheck";
 import { Outlet } from "react-router-dom";
+import AcademicProgressPage from "@/pages/parent-portal/academics";
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children, requireParent = false }: { children: React.ReactNode, requireParent?: boolean }) => {
@@ -215,7 +216,7 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: "academics",
-                        element: <div>Academic Progress</div>,
+                        element: <AcademicProgressPage />,
                     },
                     {
                         path: "attendance",
