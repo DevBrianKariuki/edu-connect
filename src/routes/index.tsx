@@ -1,3 +1,4 @@
+
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth/AuthContext";
 import Layout from "@/components/Layout";
@@ -25,226 +26,227 @@ import SettingsPage from "@/pages/settings";
 import TransportPage from "@/pages/transport";
 import OnboardingPage from "@/pages/onboarding";
 import OnboardingCheck from "@/components/auth/OnboardingCheck";
+import { Outlet } from "react-router-dom";
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-	const { state } = useAuth();
-	const navigate = useNavigate();
+    const { state } = useAuth();
+    const navigate = useNavigate();
 
-	if (!state.isAuthenticated) {
-		// Redirect to appropriate login page based on the URL
-		const isParentRoute = window.location.pathname.startsWith("/parent");
-		return (
-			<Navigate
-				to={isParentRoute ? "/auth/parent-login" : "/auth/login"}
-				replace
-			/>
-		);
-	}
+    if (!state.isAuthenticated) {
+        // Redirect to appropriate login page based on the URL
+        const isParentRoute = window.location.pathname.startsWith("/parent");
+        return (
+            <Navigate
+                to={isParentRoute ? "/auth/parent-login" : "/auth/login"}
+                replace
+            />
+        );
+    }
 
-	if (!state.user?.emailVerified) {
-		return (
-			<div className="min-h-screen flex items-center justify-center bg-background">
-				<div className="text-center space-y-4">
-					<h1 className="text-2xl font-bold">
-						Email Verification Required
-					</h1>
-					<p className="text-muted-foreground">
-						Please verify your email address before accessing this
-						page. Check your inbox for the verification link.
-					</p>
-					<Button onClick={() => navigate("/auth/login")}>
-						Back to Login
-					</Button>
-				</div>
-			</div>
-		);
-	}
+    if (!state.user?.emailVerified) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="text-center space-y-4">
+                    <h1 className="text-2xl font-bold">
+                        Email Verification Required
+                    </h1>
+                    <p className="text-muted-foreground">
+                        Please verify your email address before accessing this
+                        page. Check your inbox for the verification link.
+                    </p>
+                    <Button onClick={() => navigate("/auth/login")}>
+                        Back to Login
+                    </Button>
+                </div>
+            </div>
+        );
+    }
 
-	// Only show admin verification if user is not already verified and is an admin
-	if (!state.user?.adminVerified && state.user?.role === "admin") {
-		return <AdminVerification />;
-	}
+    // Only show admin verification if user is not already verified and is an admin
+    if (!state.user?.adminVerified && state.user?.role === "admin") {
+        return <AdminVerification />;
+    }
 
-	return <>{children}</>;
+    return <>{children}</>;
 };
 
 // Public Route wrapper component (redirects to appropriate dashboard if already authenticated)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-	const { state } = useAuth();
+    const { state } = useAuth();
 
-	if (state.isAuthenticated && state.user?.emailVerified) {
-		return state.user.role === "parent" ? (
-			<Navigate to="/parent" replace />
-		) : (
-			<Navigate to="/dashboard" replace />
-		);
-	}
+    if (state.isAuthenticated && state.user?.emailVerified) {
+        return state.user.role === "parent" ? (
+            <Navigate to="/parent" replace />
+        ) : (
+            <Navigate to="/dashboard" replace />
+        );
+    }
 
-	return <>{children}</>;
+    return <>{children}</>;
 };
 
 export const router = createBrowserRouter([
-	{
-		path: "/",
-		errorElement: <ErrorBoundary />,
-		children: [
-			{
-				path: "__/auth/action",
-				element: <ResetPasswordPage />,
-			},
-			{
-				path: "auth",
-				children: [
-					{
-						path: "login",
-						element: (
-							<PublicRoute>
-								<LoginPage />
-							</PublicRoute>
-						),
-					},
-					{
-						path: "parent-login",
-						element: (
-							<PublicRoute>
-								<ParentLoginPage />
-							</PublicRoute>
-						),
-					},
-					{
-						path: "forgot-password",
-						element: (
-							<PublicRoute>
-								<ForgotPasswordPage />
-							</PublicRoute>
-						),
-					},
-				],
-			},
-			{
-				path: "/",
-				element: (
-					<ProtectedRoute>
-						<Layout />
-					</ProtectedRoute>
-				),
-				children: [
-					{
-						element: <OnboardingCheck />,
-						children: [
-							{
-								index: true,
-								element: <Navigate to="/dashboard" replace />,
-							},
-							{
-								path: "dashboard",
-								element: <DashboardPage />,
-							},
-							{
-								path: "students",
-								children: [
-									{
-										index: true,
-										element: <StudentsPage />,
-									},
-									{
-										path: ":id",
-										element: <StudentDetails />,
-									},
-								],
-							},
-							{
-								path: "staff",
-								element: <StaffPage />,
-							},
-							{
-								path: "communication",
-								element: <CommunicationPage />,
-							},
-							{
-								path: "academics",
-								element: <AcademicsPage />,
-							},
-							{
-								path: "teachers",
-								element: <TeachersPage />,
-							},
-							{
-								path: "calendar",
-								element: <CalendarPage />,
-							},
-							{
-								path: "finance",
-								element: <FinancePage />,
-							},
-							{
-								path: "settings",
-								element: <SettingsPage />,
-							},
-							{
-								path: "transport",
-								element: <TransportPage />,
-							},
-						],
-					},
-				],
-			},
-			{
-				path: "parent",
-				element: (
-					<ProtectedRoute>
-						<ParentLayout />
-					</ProtectedRoute>
-				),
-				children: [
-					{
-						index: true,
-						element: <ParentDashboardPage />,
-					},
-					// Parent portal routes will be added here
-					{
-						path: "academics",
-						element: <div>Academic Progress</div>,
-					},
-					{
-						path: "attendance",
-						element: <div>Attendance</div>,
-					},
-					{
-						path: "calendar",
-						element: <CalendarPage />,
-					},
-					{
-						path: "messages",
-						element: <div>Messages</div>,
-					},
-					{
-						path: "reports",
-						element: <div>Reports</div>,
-					},
-					{
-						path: "fees",
-						element: <div>Fees</div>,
-					},
-					{
-						path: "settings",
-						element: <SettingsPage />,
-					},
-				],
-			},
-			{
-				path: "onboarding",
-				element: (
-					<ProtectedRoute>
-						<OnboardingPage />
-					</ProtectedRoute>
-				),
-			},
-			{
-				path: "*",
-				element: <NotFoundPage />,
-			},
-		],
-	},
+    {
+        path: "/",
+        errorElement: <ErrorBoundary />,
+        children: [
+            {
+                path: "__/auth/action",
+                element: <ResetPasswordPage />,
+            },
+            {
+                path: "auth",
+                children: [
+                    {
+                        path: "login",
+                        element: (
+                            <PublicRoute>
+                                <LoginPage />
+                            </PublicRoute>
+                        ),
+                    },
+                    {
+                        path: "parent-login",
+                        element: (
+                            <PublicRoute>
+                                <ParentLoginPage />
+                            </PublicRoute>
+                        ),
+                    },
+                    {
+                        path: "forgot-password",
+                        element: (
+                            <PublicRoute>
+                                <ForgotPasswordPage />
+                            </PublicRoute>
+                        ),
+                    },
+                ],
+            },
+            {
+                path: "/",
+                element: (
+                    <ProtectedRoute>
+                        <Layout />
+                    </ProtectedRoute>
+                ),
+                children: [
+                    {
+                        element: <OnboardingCheck><Outlet /></OnboardingCheck>,
+                        children: [
+                            {
+                                index: true,
+                                element: <Navigate to="/dashboard" replace />,
+                            },
+                            {
+                                path: "dashboard",
+                                element: <DashboardPage />,
+                            },
+                            {
+                                path: "students",
+                                children: [
+                                    {
+                                        index: true,
+                                        element: <StudentsPage />,
+                                    },
+                                    {
+                                        path: ":id",
+                                        element: <StudentDetails />,
+                                    },
+                                ],
+                            },
+                            {
+                                path: "staff",
+                                element: <StaffPage />,
+                            },
+                            {
+                                path: "communication",
+                                element: <CommunicationPage />,
+                            },
+                            {
+                                path: "academics",
+                                element: <AcademicsPage />,
+                            },
+                            {
+                                path: "teachers",
+                                element: <TeachersPage />,
+                            },
+                            {
+                                path: "calendar",
+                                element: <CalendarPage />,
+                            },
+                            {
+                                path: "finance",
+                                element: <FinancePage />,
+                            },
+                            {
+                                path: "settings",
+                                element: <SettingsPage />,
+                            },
+                            {
+                                path: "transport",
+                                element: <TransportPage />,
+                            },
+                        ],
+                    },
+                ],
+            },
+            {
+                path: "parent",
+                element: (
+                    <ProtectedRoute>
+                        <ParentLayout />
+                    </ProtectedRoute>
+                ),
+                children: [
+                    {
+                        index: true,
+                        element: <ParentDashboardPage />,
+                    },
+                    // Parent portal routes will be added here
+                    {
+                        path: "academics",
+                        element: <div>Academic Progress</div>,
+                    },
+                    {
+                        path: "attendance",
+                        element: <div>Attendance</div>,
+                    },
+                    {
+                        path: "calendar",
+                        element: <CalendarPage />,
+                    },
+                    {
+                        path: "messages",
+                        element: <div>Messages</div>,
+                    },
+                    {
+                        path: "reports",
+                        element: <div>Reports</div>,
+                    },
+                    {
+                        path: "fees",
+                        element: <div>Fees</div>,
+                    },
+                    {
+                        path: "settings",
+                        element: <SettingsPage />,
+                    },
+                ],
+            },
+            {
+                path: "onboarding",
+                element: (
+                    <ProtectedRoute>
+                        <OnboardingPage />
+                    </ProtectedRoute>
+                ),
+            },
+            {
+                path: "*",
+                element: <NotFoundPage />,
+            },
+        ],
+    },
 ]);
