@@ -27,14 +27,14 @@ import OnboardingPage from "@/pages/onboarding";
 import OnboardingCheck from "@/components/auth/OnboardingCheck";
 import { Outlet } from "react-router-dom";
 import AcademicProgressPage from "@/pages/parent-portal/academics";
+import AttendancePage from "@/pages/parent-portal/attendance";
+import MessagesPage from "@/pages/parent-portal/messages";
 
-// Protected Route wrapper component
 const ProtectedRoute = ({ children, requireParent = false }: { children: React.ReactNode, requireParent?: boolean }) => {
     const { state } = useAuth();
     const navigate = useNavigate();
 
     if (!state.isAuthenticated) {
-        // Redirect to appropriate login page based on the URL
         const isParentRoute = window.location.pathname.startsWith("/parent");
         return (
             <Navigate
@@ -63,17 +63,14 @@ const ProtectedRoute = ({ children, requireParent = false }: { children: React.R
         );
     }
 
-    // Only show admin verification if user is not already verified and is an admin
     if (!state.user?.adminVerified && state.user?.role === "admin") {
         return <AdminVerification />;
     }
 
-    // Handle parent-specific route protection
     if (requireParent && state.user?.role !== "parent") {
         return <Navigate to="/dashboard" replace />;
     }
 
-    // Prevent non-parent users from accessing parent routes
     if (!requireParent && state.user?.role === "parent") {
         return <Navigate to="/parent" replace />;
     }
@@ -81,7 +78,6 @@ const ProtectedRoute = ({ children, requireParent = false }: { children: React.R
     return <>{children}</>;
 };
 
-// Public Route wrapper component (redirects to appropriate dashboard if already authenticated)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
     const { state } = useAuth();
 
@@ -220,15 +216,15 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: "attendance",
-                        element: <div>Attendance</div>,
+                        element: <AttendancePage />,
+                    },
+                    {
+                        path: "messages",
+                        element: <MessagesPage />,
                     },
                     {
                         path: "calendar",
                         element: <CalendarPage />,
-                    },
-                    {
-                        path: "messages",
-                        element: <div>Messages</div>,
                     },
                     {
                         path: "reports",
