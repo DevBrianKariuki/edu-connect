@@ -29,6 +29,8 @@ import { Outlet } from "react-router-dom";
 import AcademicProgressPage from "@/pages/parent-portal/academics";
 import AttendancePage from "@/pages/parent-portal/attendance";
 import MessagesPage from "@/pages/parent-portal/messages";
+import ReportsPage from "@/pages/parent-portal/reports";
+import FeesPage from "@/pages/parent-portal/fees";
 
 const ProtectedRoute = ({ children, requireParent = false }: { children: React.ReactNode, requireParent?: boolean }) => {
     const { state } = useAuth();
@@ -223,20 +225,12 @@ export const router = createBrowserRouter([
                         element: <MessagesPage />,
                     },
                     {
-                        path: "calendar",
-                        element: <CalendarPage />,
-                    },
-                    {
                         path: "reports",
-                        element: <div>Reports</div>,
+                        element: <ReportsPage />,
                     },
                     {
                         path: "fees",
-                        element: <div>Fees</div>,
-                    },
-                    {
-                        path: "settings",
-                        element: <SettingsPage />,
+                        element: <FeesPage />,
                     },
                 ],
             },
