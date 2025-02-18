@@ -14,6 +14,14 @@ import { auth, db } from "./config";
 import { User } from "@/types/auth";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 
+const DUMMY_PARENT_CREDENTIALS = {
+    admissionNumber: "STD001",
+    password: "parent123",
+    parentName: "John Doe",
+    parentEmail: "parent@example.com",
+    studentName: "Jane Doe",
+};
+
 export async function signUp(
 	email: string,
 	password: string,
@@ -75,50 +83,23 @@ export async function signIn(email: string, password: string): Promise<User> {
 }
 
 export async function parentSignIn(admissionNumber: string, password: string): Promise<User> {
-	try {
-		const studentsRef = collection(db, "students");
-		const q = query(studentsRef, where("admissionNumber", "==", admissionNumber));
-		const querySnapshot = await getDocs(q);
-
-		if (querySnapshot.empty) {
-			throw new Error("Invalid admission number");
-		}
-
-		const studentData = querySnapshot.docs[0].data();
-		const parentEmail = studentData.parentEmail;
-
-		if (!parentEmail) {
-			throw new Error("No parent email associated with this admission number");
-		}
-
-		const userCredential = await signInWithEmailAndPassword(
-			auth,
-			parentEmail,
-			password
-		);
-		const user = userCredential.user;
-
-		const userDoc = await getDoc(doc(db, "users", user.uid));
-		const userData = userDoc.data();
-
-		if (userData?.role !== "parent") {
-			throw new Error("Invalid parent credentials");
-		}
-
-		return {
-			id: user.uid,
-			email: user.email!,
-			name: user.displayName || studentData.parentName || "Parent",
-			role: "parent",
-			isActive: true,
-			lastLogin: new Date(),
-			emailVerified: true,
-			adminVerified: true,
-			admissionNumber: admissionNumber,
-		};
-	} catch (error: any) {
-		throw new Error(error.message);
-	}
+    // This is a dummy authentication for development
+    if (admissionNumber === DUMMY_PARENT_CREDENTIALS.admissionNumber && 
+        password === DUMMY_PARENT_CREDENTIALS.password) {
+        return {
+            id: "dummy-parent-id",
+            email: DUMMY_PARENT_CREDENTIALS.parentEmail,
+            name: DUMMY_PARENT_CREDENTIALS.parentName,
+            role: "parent",
+            isActive: true,
+            lastLogin: new Date(),
+            emailVerified: true,
+            adminVerified: true,
+            admissionNumber: DUMMY_PARENT_CREDENTIALS.admissionNumber,
+        };
+    }
+    
+    throw new Error("Invalid admission number or password");
 }
 
 export async function resendVerificationEmail(): Promise<void> {

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
 import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const loginSchema = z.object({
     admissionNumber: z.string().min(1, "Admission number is required"),
@@ -97,6 +99,13 @@ export default function ParentLoginPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <Alert className="mb-4 bg-muted">
+                        <AlertDescription>
+                            Demo Credentials:<br />
+                            Admission Number: STD001<br />
+                            Password: parent123
+                        </AlertDescription>
+                    </Alert>
                     <Form {...form}>
                         <form
                             onSubmit={form.handleSubmit(onSubmit)}
@@ -175,22 +184,13 @@ export default function ParentLoginPage() {
                         </form>
                     </Form>
                 </CardContent>
-                <CardFooter className="flex flex-col space-y-4">
+                <CardFooter className="flex justify-center">
                     <Button
                         variant="link"
-                        className="w-full text-primary hover:text-primary/80"
+                        className="text-primary hover:text-primary/80"
                         onClick={() => navigate("/auth/forgot-password")}>
                         Forgot your password?
                     </Button>
-                    <div className="text-sm text-center text-muted-foreground">
-                        Are you a school administrator?{" "}
-                        <Button
-                            variant="link"
-                            className="px-2 font-semibold text-primary hover:text-primary/80 hover:underline"
-                            onClick={() => navigate("/auth/login")}>
-                            Login here
-                        </Button>
-                    </div>
                 </CardFooter>
             </Card>
         </div>
