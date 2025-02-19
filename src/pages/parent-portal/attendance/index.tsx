@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarIcon, Clock, UserCheck } from "lucide-react";
-import { format } from "date-fns";
+import { format, isWeekend } from "date-fns";
 
 // Dummy data for development
 const attendanceRecords = [
@@ -45,8 +45,45 @@ const attendanceRecords = [
     },
 ];
 
+// Create a set of present and absent dates for easy lookup
+const presentDates = new Set(
+    attendanceRecords
+        .filter((record) => record.status === "present")
+        .map((record) => record.date)
+);
+
+const absentDates = new Set(
+    attendanceRecords
+        .filter((record) => record.status === "absent")
+        .map((record) => record.date)
+);
+
 const AttendancePage = () => {
     const [date, setDate] = React.useState<Date | undefined>(new Date());
+
+    // Custom day styling function
+    const modifiersStyles = {
+        present: {
+            backgroundColor: "#F2FCE2",
+            color: "inherit",
+        },
+        absent: {
+            backgroundColor: "#ea384c",
+            color: "white",
+        },
+        weekend: {
+            backgroundColor: "#F1F0FB",
+            color: "inherit",
+        },
+    };
+
+    const modifiers = {
+        present: (date: Date) => 
+            presentDates.has(format(date, "yyyy-MM-dd")),
+        absent: (date: Date) => 
+            absentDates.has(format(date, "yyyy-MM-dd")),
+        weekend: (date: Date) => isWeekend(date),
+    };
 
     return (
         <div className="p-6 space-y-6 animate-fadeIn">
@@ -67,12 +104,30 @@ const AttendancePage = () => {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Calendar
-                            mode="single"
-                            selected={date}
-                            onSelect={setDate}
-                            className="rounded-md border"
-                        />
+                        <div className="flex flex-col gap-2">
+                            <Calendar
+                                mode="single"
+                                selected={date}
+                                onSelect={setDate}
+                                className="rounded-md border"
+                                modifiers={modifiers}
+                                modifiersStyles={modifiersStyles}
+                            />
+                            <div className="flex flex-col gap-2 mt-4 text-sm">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 rounded bg-[#F2FCE2]" />
+                                    <span>Present</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 rounded bg-[#ea384c]" />
+                                    <span>Absent</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 rounded bg-[#F1F0FB]" />
+                                    <span>Weekend</span>
+                                </div>
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
 
