@@ -16,10 +16,26 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Receipt, CreditCard, FileText, ArrowUpRight } from "lucide-react";
+import { Receipt, CreditCard, FileText, ArrowUpRight, Download, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
 
 // Dummy data for development
+const currentTerm = {
+    academicYear: "2024",
+    term: "Term 1",
+    startDate: "January 2024",
+    endDate: "April 2024",
+};
+
+const feeStructure = {
+    tuitionFee: 35000,
+    activityFee: 5000,
+    libraryFee: 3000,
+    transportFee: 7000,
+    total: 50000,
+};
+
 const feesSummary = {
     totalFees: 50000,
     paid: 35000,
@@ -35,6 +51,8 @@ const transactions = [
         amount: 25000,
         status: "completed",
         reference: "TRX123456",
+        paymentMethod: "M-PESA",
+        balanceAfter: 25000,
     },
     {
         id: 2,
@@ -43,6 +61,8 @@ const transactions = [
         amount: 5000,
         status: "completed",
         reference: "TRX123457",
+        paymentMethod: "M-PESA",
+        balanceAfter: 20000,
     },
     {
         id: 3,
@@ -51,16 +71,103 @@ const transactions = [
         amount: 5000,
         status: "completed",
         reference: "TRX123458",
+        paymentMethod: "M-PESA",
+        balanceAfter: 15000,
     },
 ];
 
 const FeesPage = () => {
+    const { toast } = useToast();
+
+    const handleMpesaPayment = () => {
+        // This would integrate with your M-PESA API
+        toast({
+            title: "M-PESA Payment",
+            description: "STK Push has been sent to your phone. Please complete the payment.",
+        });
+    };
+
+    const handleDownloadFeeStructure = () => {
+        // This would handle the PDF download
+        toast({
+            title: "Download Started",
+            description: "The fee structure PDF is being downloaded.",
+        });
+    };
+
     return (
         <div className="p-6 space-y-6 animate-fadeIn">
             <div className="flex items-center gap-2">
                 <Receipt className="h-6 w-6" />
                 <h1 className="text-2xl font-bold">Fees & Payments</h1>
             </div>
+
+            {/* Current Term Info */}
+            <Card>
+                <CardContent className="pt-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-lg font-semibold">
+                                {currentTerm.academicYear} - {currentTerm.term}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                                {currentTerm.startDate} - {currentTerm.endDate}
+                            </p>
+                        </div>
+                        <Button
+                            variant="outline"
+                            className="gap-2"
+                            onClick={handleDownloadFeeStructure}>
+                            <Download className="h-4 w-4" />
+                            Download Fee Structure
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Fee Structure */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Fee Structure</CardTitle>
+                    <CardDescription>Breakdown of fees for current term</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableBody>
+                            <TableRow>
+                                <TableCell className="font-medium">Tuition Fee</TableCell>
+                                <TableCell className="text-right">
+                                    KES {feeStructure.tuitionFee.toLocaleString()}
+                                </TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell className="font-medium">Activity Fee</TableCell>
+                                <TableCell className="text-right">
+                                    KES {feeStructure.activityFee.toLocaleString()}
+                                </TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell className="font-medium">Library Fee</TableCell>
+                                <TableCell className="text-right">
+                                    KES {feeStructure.libraryFee.toLocaleString()}
+                                </TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell className="font-medium">Transport Fee</TableCell>
+                                <TableCell className="text-right">
+                                    KES {feeStructure.transportFee.toLocaleString()}
+                                </TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell className="font-medium">Total</TableCell>
+                                <TableCell className="text-right font-bold">
+                                    KES {feeStructure.total.toLocaleString()}
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -116,6 +223,24 @@ const FeesPage = () => {
                 </Card>
             </div>
 
+            {/* M-PESA Payment Button */}
+            <Card>
+                <CardContent className="pt-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="font-semibold">Make Payment via M-PESA</h3>
+                            <p className="text-sm text-muted-foreground">
+                                Pay your fees securely using M-PESA
+                            </p>
+                        </div>
+                        <Button onClick={handleMpesaPayment} className="gap-2">
+                            <Phone className="h-4 w-4" />
+                            Pay with M-PESA
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
             {/* Payment History */}
             <Card>
                 <CardHeader>
@@ -131,11 +256,10 @@ const FeesPage = () => {
                                 <TableHead>Date</TableHead>
                                 <TableHead>Description</TableHead>
                                 <TableHead>Amount</TableHead>
-                                <TableHead>Reference</TableHead>
+                                <TableHead>Payment Method</TableHead>
+                                <TableHead>Balance After</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead className="text-right">
-                                    Actions
-                                </TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -146,10 +270,12 @@ const FeesPage = () => {
                                         {transaction.description}
                                     </TableCell>
                                     <TableCell>
-                                        KES{" "}
-                                        {transaction.amount.toLocaleString()}
+                                        KES {transaction.amount.toLocaleString()}
                                     </TableCell>
-                                    <TableCell>{transaction.reference}</TableCell>
+                                    <TableCell>{transaction.paymentMethod}</TableCell>
+                                    <TableCell>
+                                        KES {transaction.balanceAfter.toLocaleString()}
+                                    </TableCell>
                                     <TableCell>
                                         <Badge variant="default">
                                             {transaction.status}
