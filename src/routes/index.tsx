@@ -33,6 +33,7 @@ import ReportsPage from "@/pages/parent-portal/reports";
 import FeesPage from "@/pages/parent-portal/fees";
 import ParentCalendarPage from "@/pages/parent-portal/calendar";
 import ParentSettingsPage from "@/pages/parent-portal/settings";
+import TransportTrackingPage from "@/pages/parent-portal/transport";
 
 const ProtectedRoute = ({ children, requireParent = false }: { children: React.ReactNode, requireParent?: boolean }) => {
     const { state } = useAuth();
@@ -241,6 +242,10 @@ export const router = createBrowserRouter([
                     {
                         path: "fees",
                         element: <FeesPage />,
+                    },
+                    {
+                        path: "transport",
+                        element: <TransportTrackingPage />,
                     },
                 ],
             },

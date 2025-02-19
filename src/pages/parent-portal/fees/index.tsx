@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
     Card,
@@ -19,8 +18,18 @@ import { Button } from "@/components/ui/button";
 import { Receipt, CreditCard, FileText, ArrowUpRight, Download, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 // Dummy data for development
+const academicYears = ["2024", "2023", "2022"];
+const terms = ["Term 1", "Term 2", "Term 3"];
+
 const currentTerm = {
     academicYear: "2024",
     term: "Term 1",
@@ -78,9 +87,10 @@ const transactions = [
 
 const FeesPage = () => {
     const { toast } = useToast();
+    const [selectedYear, setSelectedYear] = React.useState(academicYears[0]);
+    const [selectedTerm, setSelectedTerm] = React.useState(terms[0]);
 
     const handleMpesaPayment = () => {
-        // This would integrate with your M-PESA API
         toast({
             title: "M-PESA Payment",
             description: "STK Push has been sent to your phone. Please complete the payment.",
@@ -88,7 +98,6 @@ const FeesPage = () => {
     };
 
     const handleDownloadFeeStructure = () => {
-        // This would handle the PDF download
         toast({
             title: "Download Started",
             description: "The fee structure PDF is being downloaded.",
@@ -102,13 +111,60 @@ const FeesPage = () => {
                 <h1 className="text-2xl font-bold">Fees & Payments</h1>
             </div>
 
+            {/* Term Selection */}
+            <div className="flex gap-4">
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Academic Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {academicYears.map((year) => (
+                            <SelectItem key={year} value={year}>
+                                {year}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+
+                <Select value={selectedTerm} onValueChange={setSelectedTerm}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Term" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {terms.map((term) => (
+                            <SelectItem key={term} value={term}>
+                                {term}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+
+            {/* M-PESA Payment Section - Moved to top */}
+            <Card className="bg-primary/5 border-primary/20">
+                <CardContent className="pt-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="font-semibold">Quick Payment via M-PESA</h3>
+                            <p className="text-sm text-muted-foreground">
+                                Pay your fees securely using M-PESA
+                            </p>
+                        </div>
+                        <Button onClick={handleMpesaPayment} className="gap-2">
+                            <Phone className="h-4 w-4" />
+                            Pay with M-PESA
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
             {/* Current Term Info */}
             <Card>
                 <CardContent className="pt-4">
                     <div className="flex items-center justify-between">
                         <div>
                             <h3 className="text-lg font-semibold">
-                                {currentTerm.academicYear} - {currentTerm.term}
+                                {selectedYear} - {selectedTerm}
                             </h3>
                             <p className="text-sm text-muted-foreground">
                                 {currentTerm.startDate} - {currentTerm.endDate}
@@ -222,24 +278,6 @@ const FeesPage = () => {
                     </CardContent>
                 </Card>
             </div>
-
-            {/* M-PESA Payment Button */}
-            <Card>
-                <CardContent className="pt-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h3 className="font-semibold">Make Payment via M-PESA</h3>
-                            <p className="text-sm text-muted-foreground">
-                                Pay your fees securely using M-PESA
-                            </p>
-                        </div>
-                        <Button onClick={handleMpesaPayment} className="gap-2">
-                            <Phone className="h-4 w-4" />
-                            Pay with M-PESA
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
 
             {/* Payment History */}
             <Card>
