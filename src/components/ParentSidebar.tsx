@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -13,6 +12,7 @@ import {
 	Menu,
 	BookOpen,
 	Wallet,
+	Bus,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,7 @@ const navItems = [
 	{ icon: BookOpen, label: "Attendance", path: "/parent/attendance" },
 	{ icon: Calendar, label: "Calendar", path: "/parent/calendar" },
 	{ icon: MessageSquare, label: "Messages", path: "/parent/messages" },
-	{ icon: FileText, label: "Reports", path: "/parent/reports" },
+	{ icon: Bus, label: "Transport", path: "/parent/transport" },
 	{ icon: Wallet, label: "Fees", path: "/parent/fees" },
 	{ icon: Settings, label: "Settings", path: "/parent/settings" },
 ];
