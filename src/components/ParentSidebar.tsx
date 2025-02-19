@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -5,7 +6,6 @@ import {
 	Home,
 	GraduationCap,
 	Calendar,
-	FileText,
 	Settings,
 	LogOut,
 	MessageSquare,
@@ -13,6 +13,7 @@ import {
 	BookOpen,
 	Wallet,
 	Bus,
+	Clock,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ const navItems = [
 	{ icon: Home, label: "Dashboard", path: "/parent" },
 	{ icon: GraduationCap, label: "Academic Progress", path: "/parent/academics" },
 	{ icon: BookOpen, label: "Attendance", path: "/parent/attendance" },
+	{ icon: Clock, label: "Timetable", path: "/parent/timetable" },
 	{ icon: Calendar, label: "Calendar", path: "/parent/calendar" },
 	{ icon: MessageSquare, label: "Messages", path: "/parent/messages" },
 	{ icon: Bus, label: "Transport", path: "/parent/transport" },

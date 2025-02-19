@@ -34,6 +34,7 @@ import FeesPage from "@/pages/parent-portal/fees";
 import ParentCalendarPage from "@/pages/parent-portal/calendar";
 import ParentSettingsPage from "@/pages/parent-portal/settings";
 import TransportTrackingPage from "@/pages/parent-portal/transport";
+import TimetablePage from "@/pages/parent-portal/timetable";
 
 const ProtectedRoute = ({ children, requireParent = false }: { children: React.ReactNode, requireParent?: boolean }) => {
     const { state } = useAuth();
@@ -236,16 +237,16 @@ export const router = createBrowserRouter([
                         element: <MessagesPage />,
                     },
                     {
-                        path: "reports",
-                        element: <ReportsPage />,
-                    },
-                    {
                         path: "fees",
                         element: <FeesPage />,
                     },
                     {
                         path: "transport",
                         element: <TransportTrackingPage />,
+                    },
+                    {
+                        path: "timetable",
+                        element: <TimetablePage />,
                     },
                 ],
             },
