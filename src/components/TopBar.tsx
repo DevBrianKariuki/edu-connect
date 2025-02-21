@@ -57,7 +57,7 @@ const TopBar = () => {
                                 <span className="sr-only">Toggle theme</span>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="bg-background border shadow-lg">
                             <DropdownMenuItem onClick={() => setTheme("light")}>
                                 Light
                             </DropdownMenuItem>
@@ -80,9 +80,9 @@ const TopBar = () => {
                                 <span className="sr-only">Notifications</span>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-80">
-                            <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
+                        <DropdownMenuContent align="end" className="w-80 bg-background border shadow-lg">
+                            <DropdownMenuLabel className="font-semibold">Notifications</DropdownMenuLabel>
+                            <DropdownMenuSeparator className="bg-border" />
                             {notifications.map((notification) => (
                                 <DropdownMenuItem key={notification.id} className="flex flex-col items-start gap-1 p-3">
                                     <div className="font-medium">{notification.title}</div>
@@ -90,7 +90,7 @@ const TopBar = () => {
                                     <div className="text-xs text-text-secondary">{notification.time}</div>
                                 </DropdownMenuItem>
                             ))}
-                            <DropdownMenuSeparator />
+                            <DropdownMenuSeparator className="bg-border" />
                             <DropdownMenuItem className="text-center justify-center text-sm text-primary">
                                 View all notifications
                             </DropdownMenuItem>
@@ -107,7 +107,7 @@ const TopBar = () => {
                                 </Avatar>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="bg-background border shadow-lg">
                             <DropdownMenuItem>Profile</DropdownMenuItem>
                             <DropdownMenuItem>Settings</DropdownMenuItem>
                             <DropdownMenuItem>Sign out</DropdownMenuItem>
