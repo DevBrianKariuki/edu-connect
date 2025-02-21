@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Work+Sans:wght@400;500;600&display=swap');
 
 @tailwind base;
@@ -6,20 +7,35 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
-    --primary: 0 0% 0%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 100%;
-    --secondary-foreground: 0 0% 0%;
-    --border: 0 0% 90%;
-    --input: 0 0% 96%;
-    --ring: 0 0% 0%;
-    --radius: 1rem;
+    --background: #FFFFFF;
+    --surface: #FFFFFF;
+    --primary: #000000;
+    --primary-light: #333333;
+    --primary-dark: #000000;
+    --secondary: #FFFFFF;
+    --secondary-light: #FFFFFF;
+    --secondary-dark: #F5F5F5;
+    --text-primary: #000000;
+    --text-secondary: #666666;
+    --border: #E5E5E5;
+    --input: #F5F5F5;
+    --ring: #000000;
+  }
+
+  .dark {
+    --background: #1A1F2C;
+    --surface: #242936;
+    --primary: #E5DEFF;
+    --primary-light: #F2EFFF;
+    --primary-dark: #C8BEFF;
+    --secondary: #2A303C;
+    --secondary-light: #313744;
+    --secondary-dark: #242936;
+    --text-primary: #FFFFFF;
+    --text-secondary: #A1A1AA;
+    --border: #2A303C;
+    --input: #2A303C;
+    --ring: #E5DEFF;
   }
 
   * {
@@ -35,23 +51,23 @@
     font-family: 'Work Sans', sans-serif;
   }
 
-  /* Custom scrollbar styles */
+  /* Dark mode optimized scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
   }
 
   ::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    @apply bg-secondary;
     border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: black;
+    @apply bg-primary;
     border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #333;
+    @apply bg-primary-light;
   }
 }
 

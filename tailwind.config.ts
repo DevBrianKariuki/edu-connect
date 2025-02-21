@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -20,24 +21,24 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#000000",
-          light: "#333333",
-          dark: "#000000",
+          DEFAULT: "var(--primary)",
+          light: "var(--primary-light)",
+          dark: "var(--primary-dark)",
         },
         secondary: {
-          DEFAULT: "#FFFFFF",
-          light: "#FFFFFF",
-          dark: "#F5F5F5",
+          DEFAULT: "var(--secondary)",
+          light: "var(--secondary-light)",
+          dark: "var(--secondary-dark)",
         },
-        background: "#FFFFFF",
-        surface: "#FFFFFF",
+        background: "var(--background)",
+        surface: "var(--surface)",
         text: {
-          primary: "#000000",
-          secondary: "#666666",
+          primary: "var(--text-primary)",
+          secondary: "var(--text-secondary)",
         },
-        border: "#E5E5E5",
-        input: "#F5F5F5",
-        ring: "#000000",
+        border: "var(--border)",
+        input: "var(--input)",
+        ring: "var(--ring)",
       },
       borderRadius: {
         lg: "1rem",

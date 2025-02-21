@@ -3,6 +3,7 @@
 
 import * as React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
+import { toZonedTime } from "date-fns-tz";
 
 type Theme = "dark" | "light" | "system";
 
@@ -38,16 +39,30 @@ export function ThemeProvider({
         const root = window.document.documentElement;
         root.classList.remove("light", "dark");
 
+        const checkNairobiTime = () => {
+            const nairobiTime = toZonedTime(new Date(), "Africa/Nairobi");
+            const hours = nairobiTime.getHours();
+            return hours >= 18 || hours < 8 ? "dark" : "light";
+        };
+
         if (theme === "system") {
-            const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-                .matches
-                ? "dark"
-                : "light";
+            const systemTheme = checkNairobiTime();
             root.classList.add(systemTheme);
             return;
         }
 
         root.classList.add(theme);
+
+        // Set up interval to check time every minute
+        const interval = setInterval(() => {
+            if (theme === "system") {
+                root.classList.remove("light", "dark");
+                const systemTheme = checkNairobiTime();
+                root.classList.add(systemTheme);
+            }
+        }, 60000); // Check every minute
+
+        return () => clearInterval(interval);
     }, [theme]);
 
     const value = {
