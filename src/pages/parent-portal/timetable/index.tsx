@@ -15,7 +15,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Book, Clock } from "lucide-react";
+import { Book, Clock, GraduationCap, User } from "lucide-react";
 
 // Dummy data for development
 const subjects = [
@@ -59,63 +59,94 @@ const timetable = {
     ],
 };
 
+// Color mapping for subjects
+const subjectColors: { [key: string]: string } = {
+    Mathematics: "bg-blue-50 border-blue-200",
+    English: "bg-green-50 border-green-200",
+    Science: "bg-purple-50 border-purple-200",
+    History: "bg-orange-50 border-orange-200",
+    Geography: "bg-pink-50 border-pink-200",
+};
+
 const TimetablePage = () => {
     return (
         <div className="p-6 space-y-6 animate-fadeIn">
-            <div className="flex items-center gap-2">
-                <Clock className="h-6 w-6" />
-                <h1 className="text-2xl font-bold">Class Timetable</h1>
+            <div className="flex items-center gap-3 mb-8">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                    <Clock className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                    <h1 className="text-2xl font-bold">Class Timetable</h1>
+                    <p className="text-muted-foreground">View your weekly class schedule and subjects</p>
+                </div>
             </div>
 
-            <Card>
+            <Card className="border-none shadow-md bg-gradient-to-br from-purple-50 to-white">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Book className="h-5 w-5" />
+                    <CardTitle className="flex items-center gap-2 text-xl">
+                        <GraduationCap className="h-5 w-5 text-primary" />
                         Enrolled Subjects
                     </CardTitle>
                     <CardDescription>List of subjects for this academic year</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Subject</TableHead>
-                                <TableHead>Teacher</TableHead>
-                                <TableHead>Grade</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {subjects.map((subject) => (
-                                <TableRow key={subject.id}>
-                                    <TableCell className="font-medium">{subject.name}</TableCell>
-                                    <TableCell>{subject.teacher}</TableCell>
-                                    <TableCell>{subject.grade}</TableCell>
+                    <div className="rounded-lg border bg-card">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Subject</TableHead>
+                                    <TableHead>Teacher</TableHead>
+                                    <TableHead>Grade</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {subjects.map((subject) => (
+                                    <TableRow key={subject.id}>
+                                        <TableCell className="font-medium">
+                                            <div className="flex items-center gap-2">
+                                                <Book className="h-4 w-4 text-primary" />
+                                                {subject.name}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                <User className="h-4 w-4 text-muted-foreground" />
+                                                {subject.teacher}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>{subject.grade}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-none shadow-md">
                 <CardHeader>
-                    <CardTitle>Weekly Schedule</CardTitle>
-                    <CardDescription>Class schedule for the week</CardDescription>
+                    <CardTitle className="text-xl">Weekly Schedule</CardTitle>
+                    <CardDescription>Your class schedule for the week</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                         {Object.entries(timetable).map(([day, schedule]) => (
-                            <Card key={day}>
-                                <CardHeader>
-                                    <CardTitle className="text-lg">{day}</CardTitle>
+                            <Card key={day} className="border shadow-sm hover:shadow-md transition-shadow">
+                                <CardHeader className="bg-primary/5 rounded-t-lg">
+                                    <CardTitle className="text-lg font-semibold">{day}</CardTitle>
                                 </CardHeader>
-                                <CardContent className="space-y-4">
+                                <CardContent className="space-y-3 pt-4">
                                     {schedule.map((slot, index) => (
-                                        <div key={index} className="space-y-1">
+                                        <div
+                                            key={index}
+                                            className={`p-3 rounded-lg border ${
+                                                subjectColors[slot.subject]
+                                            } transition-all hover:scale-[1.02]`}
+                                        >
                                             <p className="text-sm font-medium text-muted-foreground">
                                                 {slot.time}
                                             </p>
-                                            <p className="font-medium">{slot.subject}</p>
+                                            <p className="font-medium mt-1">{slot.subject}</p>
                                         </div>
                                     ))}
                                 </CardContent>
