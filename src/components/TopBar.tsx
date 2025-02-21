@@ -6,13 +6,38 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Moon, Sun, Bell, BellDot, User } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 const TopBar = () => {
     const { theme, setTheme } = useTheme();
+
+    // Sample notifications - in a real app, this would come from a backend
+    const notifications = [
+        {
+            id: 1,
+            title: "New Assignment",
+            description: "Math homework due tomorrow",
+            time: "10 minutes ago"
+        },
+        {
+            id: 2,
+            title: "Grade Posted",
+            description: "Your Science test results are available",
+            time: "1 hour ago"
+        },
+        {
+            id: 3,
+            title: "School Event",
+            description: "Annual Sports Day next week",
+            time: "2 hours ago"
+        }
+    ];
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -45,11 +70,32 @@ const TopBar = () => {
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    <Button variant="ghost" size="icon" className="relative">
-                        <BellDot className="h-[1.2rem] w-[1.2rem]" />
-                        <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />
-                        <span className="sr-only">Notifications</span>
-                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="relative">
+                                <Bell className="h-[1.2rem] w-[1.2rem]" />
+                                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                                    {notifications.length}
+                                </Badge>
+                                <span className="sr-only">Notifications</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-80">
+                            <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {notifications.map((notification) => (
+                                <DropdownMenuItem key={notification.id} className="flex flex-col items-start gap-1 p-3">
+                                    <div className="font-medium">{notification.title}</div>
+                                    <div className="text-sm text-text-secondary">{notification.description}</div>
+                                    <div className="text-xs text-text-secondary">{notification.time}</div>
+                                </DropdownMenuItem>
+                            ))}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-center justify-center text-sm text-primary">
+                                View all notifications
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
