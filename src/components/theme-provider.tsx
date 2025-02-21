@@ -45,20 +45,16 @@ export function ThemeProvider({
             return hours >= 18 || hours < 8 ? "dark" : "light";
         };
 
-        if (theme === "system") {
-            const systemTheme = checkNairobiTime();
-            root.classList.add(systemTheme);
-            return;
-        }
-
-        root.classList.add(theme);
+        const systemTheme = checkNairobiTime();
+        const effectiveTheme = theme === "system" ? systemTheme : theme;
+        root.classList.add(effectiveTheme);
 
         // Set up interval to check time every minute
         const interval = setInterval(() => {
             if (theme === "system") {
                 root.classList.remove("light", "dark");
-                const systemTheme = checkNairobiTime();
-                root.classList.add(systemTheme);
+                const newSystemTheme = checkNairobiTime();
+                root.classList.add(newSystemTheme);
             }
         }, 60000); // Check every minute
 
