@@ -35,6 +35,7 @@ import ParentCalendarPage from "@/pages/parent-portal/calendar";
 import ParentSettingsPage from "@/pages/parent-portal/settings";
 import TransportTrackingPage from "@/pages/parent-portal/transport";
 import TimetablePage from "@/pages/parent-portal/timetable";
+import TimetablePageAdmin from "@/pages/timetable";
 
 const ProtectedRoute = ({ children, requireParent = false }: { children: React.ReactNode, requireParent?: boolean }) => {
     const { state } = useAuth();
@@ -97,6 +98,19 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 
     return <>{children}</>;
 };
+
+const navItems = [
+    { icon: Home, label: "Dashboard", path: "/" },
+    { icon: Users, label: "Students", path: "/students" },
+    { icon: Users, label: "Staff", path: "/staff" },
+    { icon: Calendar, label: "Calendar", path: "/calendar" },
+    { icon: MessageSquare, label: "Communication", path: "/communication" },
+    { icon: Wallet, label: "Finance", path: "/finance" },
+    { icon: BookOpen, label: "Academics", path: "/academics" },
+    { icon: Bus, label: "Transport", path: "/transport" },
+    { icon: Calendar, label: "Timetable", path: "/timetable" },
+    { icon: Settings, label: "Settings", path: "/settings" },
+];
 
 export const router = createBrowserRouter([
     {
@@ -200,6 +214,10 @@ export const router = createBrowserRouter([
                                 path: "transport",
                                 element: <TransportPage />,
                             },
+                            {
+                                path: "timetable",
+                                element: <TimetablePageAdmin />,
+                            },
                         ],
                     },
                 ],
@@ -265,3 +283,5 @@ export const router = createBrowserRouter([
         ],
     },
 ]);
+
+export { router };
