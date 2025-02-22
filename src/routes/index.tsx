@@ -36,6 +36,16 @@ import ParentSettingsPage from "@/pages/parent-portal/settings";
 import TransportTrackingPage from "@/pages/parent-portal/transport";
 import TimetablePage from "@/pages/parent-portal/timetable";
 import TimetablePageAdmin from "@/pages/timetable";
+import { 
+    Home,
+    Users,
+    Calendar,
+    MessageSquare,
+    Wallet,
+    BookOpen,
+    Bus,
+    Settings
+} from "lucide-react";
 
 const ProtectedRoute = ({ children, requireParent = false }: { children: React.ReactNode, requireParent?: boolean }) => {
     const { state } = useAuth();
@@ -112,7 +122,7 @@ const navItems = [
     { icon: Settings, label: "Settings", path: "/settings" },
 ];
 
-export const router = createBrowserRouter([
+const router = createBrowserRouter([
     {
         path: "/",
         errorElement: <ErrorBoundary />,
@@ -284,4 +294,4 @@ export const router = createBrowserRouter([
     },
 ]);
 
-export { router };
+export { router, navItems };
