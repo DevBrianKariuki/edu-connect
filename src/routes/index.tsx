@@ -1,3 +1,4 @@
+
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth/AuthContext";
 import Layout from "@/components/Layout";
@@ -110,7 +111,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const navItems = [
-    { icon: Home, label: "Dashboard", path: "/" },
+    { icon: Home, label: "Dashboard", path: "/dashboard" },
     { icon: Users, label: "Students", path: "/students" },
     { icon: Users, label: "Staff", path: "/staff" },
     { icon: Calendar, label: "Calendar", path: "/calendar" },
