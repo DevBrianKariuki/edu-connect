@@ -50,6 +50,9 @@ import {
 } from "lucide-react";
 import TeacherLoginPage from "@/pages/auth/teacher-login";
 import TeacherDashboardPage from "@/pages/teachers/dashboard";
+import TeacherStudentsPage from "@/pages/teachers/students";
+import TeacherSubjectsPage from "@/pages/teachers/subjects";
+import TeacherGradesPage from "@/pages/teachers/grades";
 
 const ProtectedRoute = ({ children, requireParent = false }: { children: React.ReactNode, requireParent?: boolean }) => {
     const { state } = useAuth();
@@ -329,6 +332,18 @@ const router = createBrowserRouter([
                             {
                                 path: "schedule",
                                 element: <TeacherSchedulePage />,
+                            },
+                            {
+                                path: "students",
+                                element: <TeacherStudentsPage />,
+                            },
+                            {
+                                path: "subjects",
+                                element: <TeacherSubjectsPage />,
+                            },
+                            {
+                                path: "grades",
+                                element: <TeacherGradesPage />,
                             },
                         ],
                     },
