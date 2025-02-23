@@ -11,6 +11,7 @@ import {
     LogOut,
     ClipboardList,
     GraduationCap,
+    AlignJustify, // We'll use AlignJustify instead of Menu since Menu isn't available
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -113,7 +114,7 @@ const TeacherSidebar = () => {
                             variant="ghost"
                             size="icon"
                             className="absolute left-4 top-3 z-50">
-                            <Menu size={20} />
+                            <AlignJustify size={20} />
                         </Button>
                     </SheetTrigger>
                     <SheetContent side="left" className="w-64 p-6 space-y-6">
