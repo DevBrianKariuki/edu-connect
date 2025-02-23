@@ -7,8 +7,8 @@ import React, {
 } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
-import { signIn, signUp, logOut, mapFirebaseUser, parentSignIn } from "@/lib/firebase/auth";
-import { AuthState, LoginCredentials, User, ParentLoginCredentials } from "@/types/auth";
+import { signIn, signUp, logOut, mapFirebaseUser, parentSignIn, teacherSignIn } from "@/lib/firebase/auth";
+import { AuthState, LoginCredentials, User, ParentLoginCredentials, TeacherLoginCredentials } from "@/types/auth";
 import {
     doc,
     setDoc,
@@ -42,6 +42,7 @@ const AuthContext = createContext<{
     state: AuthState;
     login: (credentials: LoginCredentials) => Promise<void>;
     parentLogin: (credentials: ParentLoginCredentials) => Promise<void>;
+    teacherLogin: (credentials: TeacherLoginCredentials) => Promise<void>;
     signup: (credentials: LoginCredentials & { name: string }) => Promise<void>;
     logout: () => Promise<void>;
     verifyAdminCode: (code: string) => Promise<void>;
@@ -167,6 +168,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
     }, []);
 
+    const teacherLogin = useCallback(async (credentials: TeacherLoginCredentials) => {
+        try {
+            dispatch({ type: "LOGIN_START" });
+            const user = await teacherSignIn(credentials.staffId, credentials.password);
+
+            dispatch({
+                type: "LOGIN_SUCCESS",
+                payload: { user, token: "" },
+            });
+        } catch (error: any) {
+            dispatch({
+                type: "LOGIN_FAILURE",
+                payload: error.message,
+            });
+            throw error;
+        }
+    }, []);
+
     const signup = useCallback(
         async (credentials: LoginCredentials & { name: string }) => {
             try {
@@ -274,6 +293,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         state,
         login,
         parentLogin,
+        teacherLogin,
         signup,
         logout,
         verifyAdminCode,
