@@ -48,6 +48,8 @@ import {
     Bus,
     Settings
 } from "lucide-react";
+import TeacherLoginPage from "@/pages/auth/teacher-login";
+import TeacherDashboardPage from "@/pages/teachers/dashboard";
 
 const ProtectedRoute = ({ children, requireParent = false }: { children: React.ReactNode, requireParent?: boolean }) => {
     const { state } = useAuth();
@@ -157,6 +159,14 @@ const router = createBrowserRouter([
                         element: (
                             <PublicRoute>
                                 <ForgotPasswordPage />
+                            </PublicRoute>
+                        ),
+                    },
+                    {
+                        path: "teacher-login",
+                        element: (
+                            <PublicRoute>
+                                <TeacherLoginPage />
                             </PublicRoute>
                         ),
                     },
@@ -300,6 +310,29 @@ const router = createBrowserRouter([
                         <OnboardingPage />
                     </ProtectedRoute>
                 ),
+            },
+            {
+                path: "/teacher",
+                element: (
+                    <ProtectedRoute>
+                        <Layout />
+                    </ProtectedRoute>
+                ),
+                children: [
+                    {
+                        element: <OnboardingCheck><Outlet /></OnboardingCheck>,
+                        children: [
+                            {
+                                index: true,
+                                element: <TeacherDashboardPage />,
+                            },
+                            {
+                                path: "schedule",
+                                element: <TeacherSchedulePage />,
+                            },
+                        ],
+                    },
+                ],
             },
             {
                 path: "*",

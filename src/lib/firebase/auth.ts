@@ -22,6 +22,13 @@ const DUMMY_PARENT_CREDENTIALS = {
     studentName: "Jane Doe",
 };
 
+const DUMMY_TEACHER_CREDENTIALS = {
+    staffId: "TCH001",
+    password: "teacher123",
+    teacherName: "John Smith",
+    teacherEmail: "john.smith@school.com",
+};
+
 export async function signUp(
 	email: string,
 	password: string,
@@ -100,6 +107,26 @@ export async function parentSignIn(admissionNumber: string, password: string): P
     }
     
     throw new Error("Invalid admission number or password");
+}
+
+export async function teacherSignIn(staffId: string, password: string): Promise<User> {
+    // This is a dummy authentication for development
+    if (staffId === DUMMY_TEACHER_CREDENTIALS.staffId && 
+        password === DUMMY_TEACHER_CREDENTIALS.password) {
+        return {
+            id: "dummy-teacher-id",
+            email: DUMMY_TEACHER_CREDENTIALS.teacherEmail,
+            name: DUMMY_TEACHER_CREDENTIALS.teacherName,
+            role: "teacher",
+            isActive: true,
+            lastLogin: new Date(),
+            emailVerified: true,
+            adminVerified: true,
+            staffId: DUMMY_TEACHER_CREDENTIALS.staffId,
+        };
+    }
+    
+    throw new Error("Invalid staff ID or password");
 }
 
 export async function resendVerificationEmail(): Promise<void> {
