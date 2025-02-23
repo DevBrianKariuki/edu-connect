@@ -1,4 +1,3 @@
-
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth/AuthContext";
 import Layout from "@/components/Layout";
@@ -14,6 +13,8 @@ import ParentDashboardPage from "@/pages/parent-portal/dashboard";
 import StudentsPage from "@/pages/students";
 import StudentDetails from "@/pages/students/[id]";
 import TeachersPage from "@/pages/teachers";
+import TeacherDetailsPage from "@/pages/teachers/[id]";
+import TeacherSchedulePage from "@/pages/teachers/schedule";
 import CalendarPage from "@/pages/calendar";
 import FinancePage from "@/pages/finance";
 import NotFoundPage from "@/pages/404";
@@ -207,7 +208,20 @@ const router = createBrowserRouter([
                             },
                             {
                                 path: "teachers",
-                                element: <TeachersPage />,
+                                children: [
+                                    {
+                                        index: true,
+                                        element: <TeachersPage />,
+                                    },
+                                    {
+                                        path: ":id",
+                                        element: <TeacherDetailsPage />,
+                                    },
+                                    {
+                                        path: "schedule",
+                                        element: <TeacherSchedulePage />,
+                                    },
+                                ],
                             },
                             {
                                 path: "calendar",

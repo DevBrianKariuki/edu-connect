@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
     Table,
@@ -21,7 +22,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Sample teacher data
 interface Teacher {
     id: string;
     name: string;
@@ -148,14 +148,16 @@ export default function TeachersPage() {
                                 teachers.map((teacher) => (
                                     <TableRow key={teacher.id}>
                                         <TableCell>
-                                            <div>
-                                                <p className="font-medium">
-                                                    {teacher.name}
-                                                </p>
-                                                <p className="text-sm text-muted-foreground">
-                                                    {teacher.qualification}
-                                                </p>
-                                            </div>
+                                            <Link to={`/teachers/${teacher.id}`}>
+                                                <div className="hover:text-primary">
+                                                    <p className="font-medium">
+                                                        {teacher.name}
+                                                    </p>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {teacher.qualification}
+                                                    </p>
+                                                </div>
+                                            </Link>
                                         </TableCell>
                                         <TableCell>
                                             <div className="space-y-1">
