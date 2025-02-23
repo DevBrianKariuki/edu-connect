@@ -53,6 +53,9 @@ import TeacherDashboardPage from "@/pages/teachers/dashboard";
 import TeacherStudentsPage from "@/pages/teachers/students";
 import TeacherSubjectsPage from "@/pages/teachers/subjects";
 import TeacherGradesPage from "@/pages/teachers/grades";
+import TeacherAttendancePage from "@/pages/teachers/attendance";
+import TeacherMessagesPage from "@/pages/teachers/messages";
+import TeacherSettingsPage from "@/pages/teachers/settings";
 
 const ProtectedRoute = ({ children, requireParent = false }: { children: React.ReactNode, requireParent?: boolean }) => {
     const { state } = useAuth();
@@ -342,8 +345,20 @@ const router = createBrowserRouter([
                                 element: <TeacherSubjectsPage />,
                             },
                             {
+                                path: "attendance",
+                                element: <TeacherAttendancePage />,
+                            },
+                            {
                                 path: "grades",
                                 element: <TeacherGradesPage />,
+                            },
+                            {
+                                path: "messages",
+                                element: <TeacherMessagesPage />,
+                            },
+                            {
+                                path: "settings",
+                                element: <TeacherSettingsPage />,
                             },
                         ],
                     },

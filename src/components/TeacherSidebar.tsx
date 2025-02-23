@@ -11,7 +11,8 @@ import {
     LogOut,
     ClipboardList,
     GraduationCap,
-    AlignJustify, // We'll use AlignJustify instead of Menu since Menu isn't available
+    AlignJustify,
+    MessageSquare,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ const teacherNavItems = [
     { icon: BookOpen, label: "Subjects", path: "/teacher/subjects" },
     { icon: ClipboardList, label: "Attendance", path: "/teacher/attendance" },
     { icon: GraduationCap, label: "Grades", path: "/teacher/grades" },
+    { icon: MessageSquare, label: "Messages", path: "/teacher/messages" },
     { icon: Settings, label: "Settings", path: "/teacher/settings" },
 ];
 
