@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +19,7 @@ import {
     Check, 
     X 
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Sample teacher data
 interface Teacher {
