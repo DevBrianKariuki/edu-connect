@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ImagePlus } from "lucide-react";
 
 const studentFormSchema = z.object({
     firstName: z.string().min(2, "First name is required"),
@@ -41,6 +41,7 @@ const studentFormSchema = z.object({
     guardianContact: z.string().min(10, "Valid contact number is required"),
     guardianEmail: z.string().email("Invalid email address"),
     address: z.string().min(5, "Address is required"),
+    profilePhoto: z.any().optional(),
 });
 
 type StudentFormData = z.infer<typeof studentFormSchema>;
@@ -96,6 +97,44 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                 </DialogHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+                        <div className="flex justify-center">
+                            <FormField
+                                control={form.control}
+                                name="profilePhoto"
+                                render={({ field: { onChange, value, ...field } }) => (
+                                    <FormItem>
+                                        <FormLabel className="relative flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed rounded-full cursor-pointer hover:border-primary">
+                                            {value ? (
+                                                <img
+                                                    src={URL.createObjectURL(value)}
+                                                    alt="Profile preview"
+                                                    className="w-full h-full object-cover rounded-full"
+                                                />
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center text-muted-foreground">
+                                                    <ImagePlus className="w-8 h-8" />
+                                                    <span className="text-xs mt-2">Add Photo</span>
+                                                </div>
+                                            )}
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) {
+                                                        onChange(file);
+                                                    }
+                                                }}
+                                                {...field}
+                                            />
+                                        </FormLabel>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
