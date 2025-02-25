@@ -25,36 +25,13 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Building2, MapPin } from "lucide-react"; // Removed Calendar from here
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
+import { Building2, MapPin } from "lucide-react";
 
 const onboardingSchema = z.object({
     schoolName: z.string().min(2, "School name must be at least 2 characters"),
     location: z.string().min(2, "Location must be at least 2 characters"),
-    academicYear: z.string(),
-    terms: z.array(
-        z.object({
-            name: z.string(),
-            startDate: z.date(),
-            endDate: z.date(),
-        })
-    ).length(3, "Must define all three terms"),
+    phone: z.string().min(6, "Phone number must be at least 6 characters"),
+    email: z.string().email("Please enter a valid email address"),
 });
 
 type OnboardingData = z.infer<typeof onboardingSchema>;
@@ -65,20 +42,13 @@ export default function OnboardingPage() {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
 
-    const currentYear = new Date().getFullYear();
-    const academicYear = `${currentYear}-${currentYear + 1}`;
-
     const form = useForm<OnboardingData>({
         resolver: zodResolver(onboardingSchema),
         defaultValues: {
             schoolName: "",
             location: "",
-            academicYear: academicYear,
-            terms: [
-                { name: "Term 1", startDate: new Date(), endDate: new Date() },
-                { name: "Term 2", startDate: new Date(), endDate: new Date() },
-                { name: "Term 3", startDate: new Date(), endDate: new Date() },
-            ],
+            phone: "",
+            email: "",
         },
     });
 
@@ -92,8 +62,8 @@ export default function OnboardingPage() {
             await setDoc(doc(db, "schools", state.user.id), {
                 name: data.schoolName,
                 location: data.location,
-                academicYear: data.academicYear,
-                terms: data.terms,
+                phone: data.phone,
+                email: data.email,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             });
@@ -128,7 +98,7 @@ export default function OnboardingPage() {
 
     return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
-            <Card className="w-full max-w-4xl">
+            <Card className="w-full max-w-lg">
                 <CardHeader>
                     <CardTitle className="text-2xl">School Setup</CardTitle>
                     <CardDescription>
@@ -139,224 +109,92 @@ export default function OnboardingPage() {
                     <Form {...form}>
                         <form
                             onSubmit={form.handleSubmit(onSubmit)}
-                            className="space-y-6">
-                            <div className="grid gap-6">
-                                <FormField
-                                    control={form.control}
-                                    name="schoolName"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>School Name</FormLabel>
-                                            <FormControl>
-                                                <div className="relative">
-                                                    <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                                    <Input
-                                                        {...field}
-                                                        className="pl-9"
-                                                        placeholder="Enter school name"
-                                                    />
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                            className="space-y-6"
+                        >
+                            <FormField
+                                control={form.control}
+                                name="schoolName"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>School Name</FormLabel>
+                                        <FormControl>
+                                            <div className="relative">
+                                                <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                    {...field}
+                                                    className="pl-9"
+                                                    placeholder="Enter school name"
+                                                />
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                                <FormField
-                                    control={form.control}
-                                    name="location"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Location</FormLabel>
-                                            <FormControl>
-                                                <div className="relative">
-                                                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                                    <Input
-                                                        {...field}
-                                                        className="pl-9"
-                                                        placeholder="Enter school location"
-                                                    />
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                            <FormField
+                                control={form.control}
+                                name="location"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Location</FormLabel>
+                                        <FormControl>
+                                            <div className="relative">
+                                                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                    {...field}
+                                                    className="pl-9"
+                                                    placeholder="Enter school location"
+                                                />
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                                <FormField
-                                    control={form.control}
-                                    name="academicYear"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Academic Year</FormLabel>
-                                            <Select
-                                                onValueChange={field.onChange}
-                                                defaultValue={field.value}>
-                                                <FormControl>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Select academic year" />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    <SelectItem
-                                                        value={`${
-                                                            currentYear - 1
-                                                        }-${currentYear}`}>
-                                                        {currentYear - 1}-
-                                                        {currentYear}
-                                                    </SelectItem>
-                                                    <SelectItem
-                                                        value={`${currentYear}-${
-                                                            currentYear + 1
-                                                        }`}>
-                                                        {currentYear}-
-                                                        {currentYear + 1}
-                                                    </SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-
-                            <Separator />
-
-                            <div className="space-y-4">
-                                <h3 className="text-lg font-medium">
-                                    Academic Terms
-                                </h3>
-                                <div className="grid gap-6">
-                                    {[0, 1, 2].map((index) => (
-                                        <div
-                                            key={index}
-                                            className="grid gap-4 sm:grid-cols-2">
-                                            <FormField
-                                                control={form.control}
-                                                name={`terms.${index}.startDate`}
-                                                render={({ field }) => (
-                                                    <FormItem className="flex flex-col">
-                                                        <FormLabel>
-                                                            Term {index + 1} Start
-                                                            Date
-                                                        </FormLabel>
-                                                        <Popover>
-                                                            <PopoverTrigger asChild>
-                                                                <FormControl>
-                                                                    <Button
-                                                                        variant={"outline"}
-                                                                        className={cn(
-                                                                            "w-full pl-3 text-left font-normal",
-                                                                            !field.value &&
-                                                                                "text-muted-foreground"
-                                                                        )}>
-                                                                        {field.value ? (
-                                                                            format(
-                                                                                field.value,
-                                                                                "PPP"
-                                                                            )
-                                                                        ) : (
-                                                                            <span>
-                                                                                Pick
-                                                                                a
-                                                                                date
-                                                                            </span>
-                                                                        )}
-                                                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                                    </Button>
-                                                                </FormControl>
-                                                            </PopoverTrigger>
-                                                            <PopoverContent
-                                                                className="w-auto p-0"
-                                                                align="start">
-                                                                <Calendar
-                                                                    mode="single"
-                                                                    selected={
-                                                                        field.value
-                                                                    }
-                                                                    onSelect={
-                                                                        field.onChange
-                                                                    }
-                                                                    initialFocus
-                                                                />
-                                                            </PopoverContent>
-                                                        </Popover>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
+                            <FormField
+                                control={form.control}
+                                name="phone"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Contact Number</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                {...field}
+                                                type="tel"
+                                                placeholder="Enter contact number"
                                             />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                                            <FormField
-                                                control={form.control}
-                                                name={`terms.${index}.endDate`}
-                                                render={({ field }) => (
-                                                    <FormItem className="flex flex-col">
-                                                        <FormLabel>
-                                                            Term {index + 1} End
-                                                            Date
-                                                        </FormLabel>
-                                                        <Popover>
-                                                            <PopoverTrigger asChild>
-                                                                <FormControl>
-                                                                    <Button
-                                                                        variant={"outline"}
-                                                                        className={cn(
-                                                                            "w-full pl-3 text-left font-normal",
-                                                                            !field.value &&
-                                                                                "text-muted-foreground"
-                                                                        )}>
-                                                                        {field.value ? (
-                                                                            format(
-                                                                                field.value,
-                                                                                "PPP"
-                                                                            )
-                                                                        ) : (
-                                                                            <span>
-                                                                                Pick
-                                                                                a
-                                                                                date
-                                                                            </span>
-                                                                        )}
-                                                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                                    </Button>
-                                                                </FormControl>
-                                                            </PopoverTrigger>
-                                                            <PopoverContent
-                                                                className="w-auto p-0"
-                                                                align="start">
-                                                                <Calendar
-                                                                    mode="single"
-                                                                    selected={
-                                                                        field.value
-                                                                    }
-                                                                    onSelect={
-                                                                        field.onChange
-                                                                    }
-                                                                    initialFocus
-                                                                />
-                                                            </PopoverContent>
-                                                        </Popover>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
+                            <FormField
+                                control={form.control}
+                                name="email"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>School Email</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                {...field}
+                                                type="email"
+                                                placeholder="Enter school email"
                                             />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
                             <Button
                                 type="submit"
                                 className="w-full"
-                                disabled={isLoading}>
-                                {isLoading ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Saving...
-                                    </>
-                                ) : (
-                                    "Complete Setup"
-                                )}
+                                disabled={isLoading}
+                            >
+                                Complete Setup
                             </Button>
                         </form>
                     </Form>
