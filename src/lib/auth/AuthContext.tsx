@@ -17,7 +17,7 @@ import {
     writeBatch,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { sendAdminVerificationEmail } from "@/lib/services/email";
+import { sendAdminVerificationEmail, sendLoginNotificationEmail } from "@/lib/services/email";
 import { Timestamp } from "firebase/firestore";
 import { Navigate } from "react-router-dom";
 
@@ -135,6 +135,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             dispatch({ type: "LOGIN_START" });
             const user = await signIn(credentials.email, credentials.password);
             const token = await auth.currentUser?.getIdToken();
+
+            // Send login notification email
+            await sendLoginNotificationEmail(user);
 
             dispatch({
                 type: "LOGIN_SUCCESS",
