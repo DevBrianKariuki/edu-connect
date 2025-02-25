@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +35,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import StudentFormDialog from "@/components/students/StudentFormDialog";
 
 interface ClassData {
     id: string;
@@ -71,6 +71,7 @@ const sampleClasses: ClassData[] = [
 
 export default function StudentsPage() {
     const [showAddClassDialog, setShowAddClassDialog] = useState(false);
+    const [showAddStudentDialog, setShowAddStudentDialog] = useState(false);
     const [newClassName, setNewClassName] = useState("");
     const [newClassCapacity, setNewClassCapacity] = useState("");
     const [newClassTeacher, setNewClassTeacher] = useState("");
@@ -86,6 +87,23 @@ export default function StudentsPage() {
         setNewClassName("");
         setNewClassCapacity("");
         setNewClassTeacher("");
+    };
+
+    const handleAddStudent = async (data: any) => {
+        try {
+            // Here you would typically make an API call to add the student
+            console.log("Adding student:", data);
+            toast({
+                title: "Success",
+                description: "Student has been successfully added.",
+            });
+        } catch (error: any) {
+            toast({
+                title: "Error",
+                description: error.message || "Failed to add student",
+                variant: "destructive",
+            });
+        }
     };
 
     return (
@@ -145,7 +163,7 @@ export default function StudentsPage() {
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
-                    <Button>Add Student</Button>
+                    <Button onClick={() => setShowAddStudentDialog(true)}>Add Student</Button>
                 </div>
             </div>
 
@@ -234,6 +252,13 @@ export default function StudentsPage() {
                     </Table>
                 </CardContent>
             </Card>
+
+            <StudentFormDialog
+                open={showAddStudentDialog}
+                onOpenChange={setShowAddStudentDialog}
+                onSubmit={handleAddStudent}
+                classes={sampleClasses}
+            />
         </div>
     );
 }
