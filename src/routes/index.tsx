@@ -91,7 +91,7 @@ const ProtectedRoute = ({ children, requireParent = false }: { children: React.R
         );
     }
 
-    if (!state.user?.adminVerified && state.user?.role === "admin") {
+    if (state.user?.role === "admin" && !state.user?.adminVerified && !window.location.pathname.includes('/auth')) {
         return <AdminVerification />;
     }
 
