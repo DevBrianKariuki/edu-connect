@@ -4,6 +4,7 @@ import Layout from "@/components/Layout";
 import ParentLayout from "@/components/ParentLayout";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import LoginPage from "@/pages/auth/login";
+import RegisterPage from "@/pages/auth/Register";
 import ParentLoginPage from "@/pages/auth/parent-login";
 import ForgotPasswordPage from "@/pages/auth/ForgotPassword";
 import ResetPasswordPage from "@/pages/auth/ResetPassword";
@@ -149,6 +150,14 @@ const router = createBrowserRouter([
                         element: (
                             <PublicRoute>
                                 <LoginPage />
+                            </PublicRoute>
+                        ),
+                    },
+                    {
+                        path: "register",
+                        element: (
+                            <PublicRoute>
+                                <RegisterPage />
                             </PublicRoute>
                         ),
                     },
