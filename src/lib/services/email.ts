@@ -6,6 +6,7 @@ const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
 const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
 const EMAILJS_LOGIN_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_LOGIN_TEMPLATE_ID;
 const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+const ADMIN_EMAIL = "devbriankariuki@gmail.com"; // The admin email to receive verification codes
 
 // Initialize EmailJS
 emailjs.init(EMAILJS_PUBLIC_KEY);
@@ -15,24 +16,19 @@ export const sendAdminVerificationEmail = async (
     code: string
 ) => {
     try {
-        // Validate environment variables
-        if (
-            !EMAILJS_SERVICE_ID ||
-            !EMAILJS_TEMPLATE_ID ||
-            !EMAILJS_PUBLIC_KEY
-        ) {
+        if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
             throw new Error("EmailJS configuration is missing");
         }
 
         const templateParams = {
-            to_email: "devbriankariuki@gmail.com",
+            to_email: ADMIN_EMAIL, // Send to configured admin email
             user_name: userDetails.name,
             user_email: userDetails.email,
             verification_code: code,
             expiry_time: "30 minutes",
         };
 
-        console.log("Sending email with params:", {
+        console.log("Sending admin verification email with params:", {
             ...templateParams,
             serviceId: EMAILJS_SERVICE_ID,
             templateId: EMAILJS_TEMPLATE_ID,
@@ -51,10 +47,10 @@ export const sendAdminVerificationEmail = async (
             );
         }
 
-        console.log("Email sent successfully:", response);
+        console.log("Admin verification email sent successfully:", response);
         return response;
     } catch (error: any) {
-        console.error("Error sending email:", error);
+        console.error("Error sending admin verification email:", error);
         throw new Error(
             `Failed to send verification email: ${
                 error.message || "Unknown error"
@@ -120,6 +116,5 @@ export const sendLoginNotificationEmail = async (userDetails: User) => {
     } catch (error: any) {
         console.error("Error sending login notification:", error);
         // We don't throw the error here as this is a non-critical feature
-        // Instead, we log it and continue with the login process
     }
 };

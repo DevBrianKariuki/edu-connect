@@ -12,7 +12,8 @@ import {
 } from "firebase/auth";
 import { auth, db } from "./config";
 import { User } from "@/types/auth";
-import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs, setDoc } from "firebase/firestore";
+import { Timestamp } from "firebase/firestore";
 
 const DUMMY_PARENT_CREDENTIALS = {
     admissionNumber: "STD001",
@@ -35,18 +36,30 @@ export async function signUp(
 	name: string
 ): Promise<User> {
 	try {
-		const userCredential: UserCredential =
-			await createUserWithEmailAndPassword(auth, email, password);
+		const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, email, password);
 		const user = userCredential.user;
 
 		await updateProfile(user, { displayName: name });
 		await sendEmailVerification(user);
 
+		// Store user data in adminUsers collection
+		await setDoc(doc(db, "adminUsers", user.uid), {
+			id: user.uid,
+			email: user.email,
+			name: name,
+			role: "admin",
+			isActive: true,
+			createdAt: Timestamp.now(),
+			lastLogin: Timestamp.now(),
+			emailVerified: false,
+			adminVerified: false,
+		});
+
 		return {
 			id: user.uid,
 			email: user.email!,
 			name: name,
-			role: "student",
+			role: "admin",
 			isActive: true,
 			lastLogin: new Date(),
 			emailVerified: user.emailVerified,
