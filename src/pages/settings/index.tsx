@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -8,16 +9,82 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Settings, Bell, Mail, Shield, School } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { db } from "@/lib/firebase/config";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { useAuth } from "@/lib/auth/AuthContext";
+
+interface SchoolSettings {
+  name: string;
+  location: string;
+  phone: string;
+  email: string;
+}
 
 const SettingsPage = () => {
   const { toast } = useToast();
+  const { state } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  const [schoolData, setSchoolData] = useState<SchoolSettings>({
+    name: "",
+    location: "",
+    phone: "",
+    email: "",
+  });
 
-  const handleSave = () => {
-    toast({
-      title: "Settings saved",
-      description: "Your settings have been saved successfully.",
-    });
+  useEffect(() => {
+    const fetchSchoolData = async () => {
+      if (!state.user?.id) return;
+
+      try {
+        const schoolDoc = await getDoc(doc(db, "schools", state.user.id));
+        if (schoolDoc.exists()) {
+          const data = schoolDoc.data() as SchoolSettings;
+          setSchoolData(data);
+        }
+      } catch (error) {
+        console.error("Error fetching school data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load school settings",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSchoolData();
+  }, [state.user?.id, toast]);
+
+  const handleSave = async () => {
+    if (!state.user?.id) return;
+
+    try {
+      await updateDoc(doc(db, "schools", state.user.id), schoolData);
+      toast({
+        title: "Settings saved",
+        description: "Your settings have been saved successfully.",
+      });
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save settings",
+        variant: "destructive",
+      });
+    }
   };
+
+  const handleInputChange = (field: keyof SchoolSettings) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSchoolData(prev => ({
+      ...prev,
+      [field]: e.target.value
+    }));
+  };
+
+  if (isLoading) {
+    return <div className="container mx-auto p-6">Loading...</div>;
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6 animate-fadeIn">
@@ -53,19 +120,40 @@ const SettingsPage = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="schoolName">School Name</Label>
-                <Input id="schoolName" placeholder="Enter school name" />
+                <Input 
+                  id="schoolName" 
+                  value={schoolData.name} 
+                  onChange={handleInputChange('name')}
+                  placeholder="Enter school name" 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="address">School Address</Label>
-                <Input id="address" placeholder="Enter school address" />
+                <Input 
+                  id="address" 
+                  value={schoolData.location}
+                  onChange={handleInputChange('location')}
+                  placeholder="Enter school address" 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Contact Number</Label>
-                <Input id="phone" placeholder="Enter contact number" />
+                <Input 
+                  id="phone" 
+                  value={schoolData.phone}
+                  onChange={handleInputChange('phone')}
+                  placeholder="Enter contact number" 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">School Email</Label>
-                <Input id="email" type="email" placeholder="Enter school email" />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={schoolData.email}
+                  onChange={handleInputChange('email')}
+                  placeholder="Enter school email" 
+                />
               </div>
             </CardContent>
           </Card>
