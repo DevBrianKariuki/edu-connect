@@ -33,6 +33,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { useToast } from "@/components/ui/use-toast";
 
 // Custom date validator for max date (today)
 const dateStringSchema = z
@@ -82,6 +83,8 @@ interface Props {
 export default function StudentFormDialog({ open, onOpenChange, onSubmit, classes }: Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [profilePreview, setProfilePreview] = useState<string | null>(null);
+    const [datePickerOpen, setDatePickerOpen] = useState(false);
+    const { toast } = useToast();
 
     const form = useForm<StudentFormData>({
         resolver: zodResolver(studentFormSchema),
@@ -107,8 +110,17 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
             form.reset();
             setProfilePreview(null);
             onOpenChange(false);
+            toast({
+                title: "Success",
+                description: "Student data saved successfully",
+            });
         } catch (error) {
             console.error("Error submitting student form:", error);
+            toast({
+                title: "Error",
+                description: "Failed to add student",
+                variant: "destructive",
+            });
         } finally {
             setIsSubmitting(false);
         }
@@ -151,6 +163,13 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
         form.setValue('profilePhoto', undefined);
         setProfilePreview(null);
         form.clearErrors('profilePhoto');
+    };
+
+    const handleDateSelect = (date: Date | undefined) => {
+        if (date) {
+            form.setValue('dateOfBirth', format(date, "yyyy-MM-dd"));
+            setTimeout(() => setDatePickerOpen(false), 100); // Close popover after selection
+        }
     };
 
     return (
@@ -286,7 +305,7 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                 render={({ field }) => (
                                     <FormItem className="flex flex-col">
                                         <FormLabel>Date of Birth</FormLabel>
-                                        <Popover>
+                                        <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
                                             <PopoverTrigger asChild>
                                                 <FormControl>
                                                     <Button
@@ -296,6 +315,8 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                                             !field.value && "text-muted-foreground",
                                                             form.formState.errors.dateOfBirth && "border-[#ea384c] focus-visible:ring-[#ea384c]"
                                                         )}
+                                                        onClick={() => setDatePickerOpen(true)}
+                                                        type="button"
                                                     >
                                                         {field.value ? (
                                                             format(new Date(field.value), "PPP")
@@ -306,15 +327,11 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                                     </Button>
                                                 </FormControl>
                                             </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
+                                            <PopoverContent className="w-auto p-0 bg-white" align="start">
                                                 <Calendar
                                                     mode="single"
                                                     selected={field.value ? new Date(field.value) : undefined}
-                                                    onSelect={(date) => {
-                                                        if (date) {
-                                                            field.onChange(format(date, "yyyy-MM-dd"));
-                                                        }
-                                                    }}
+                                                    onSelect={handleDateSelect}
                                                     disabled={(date) => {
                                                         // Disable future dates
                                                         const today = new Date();
@@ -442,7 +459,7 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                 Cancel
                             </Button>
                             <Button type="submit" disabled={isSubmitting}>
-                                Add Student
+                                {isSubmitting ? "Adding..." : "Add Student"}
                             </Button>
                         </DialogFooter>
                     </form>

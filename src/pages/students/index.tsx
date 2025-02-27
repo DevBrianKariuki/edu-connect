@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,9 +34,14 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Plus, Search, Edit, Trash } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import StudentFormDialog from "@/components/students/StudentFormDialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { db, storage } from "@/lib/firebase/config";
+import { collection, addDoc, getDocs, query, where, deleteDoc, doc, Timestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 interface ClassData {
     id: string;
@@ -43,6 +49,24 @@ interface ClassData {
     capacity: number;
     teacher: string;
     students: number;
+}
+
+interface StudentData {
+    id: string;
+    firstName: string;
+    lastName: string;
+    admissionNumber: string;
+    class: string;
+    className?: string;
+    dateOfBirth: string;
+    gender: string;
+    guardianName: string;
+    guardianRelation: string;
+    guardianContact: string;
+    guardianEmail: string;
+    address: string;
+    profilePhotoUrl?: string;
+    createdAt: Timestamp;
 }
 
 const sampleClasses: ClassData[] = [
@@ -75,7 +99,48 @@ export default function StudentsPage() {
     const [newClassName, setNewClassName] = useState("");
     const [newClassCapacity, setNewClassCapacity] = useState("");
     const [newClassTeacher, setNewClassTeacher] = useState("");
+    const [students, setStudents] = useState<StudentData[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedClass, setSelectedClass] = useState("all");
     const { toast } = useToast();
+    const { state } = useAuth();
+
+    useEffect(() => {
+        fetchStudents();
+    }, []);
+
+    const fetchStudents = async () => {
+        try {
+            setLoading(true);
+            const studentsCollection = collection(db, "students");
+            const studentsSnapshot = await getDocs(studentsCollection);
+            
+            const studentsData: StudentData[] = [];
+            
+            studentsSnapshot.forEach((doc) => {
+                const data = doc.data() as Omit<StudentData, 'id'>;
+                const classInfo = sampleClasses.find(c => c.id === data.class);
+                
+                studentsData.push({
+                    id: doc.id,
+                    ...data,
+                    className: classInfo?.name
+                });
+            });
+            
+            setStudents(studentsData);
+        } catch (error) {
+            console.error("Error fetching students:", error);
+            toast({
+                title: "Error",
+                description: "Failed to load students",
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleAddClass = () => {
         // Here you would typically make an API call to add the class
@@ -91,20 +156,83 @@ export default function StudentsPage() {
 
     const handleAddStudent = async (data: any) => {
         try {
-            // Here you would typically make an API call to add the student
-            console.log("Adding student:", data);
+            let profilePhotoUrl = "";
+            
+            // Upload profile photo if provided
+            if (data.profilePhoto) {
+                const storageRef = ref(storage, `student-photos/${Date.now()}-${data.profilePhoto.name}`);
+                await uploadBytes(storageRef, data.profilePhoto);
+                profilePhotoUrl = await getDownloadURL(storageRef);
+            }
+            
+            // Add student data to Firestore
+            const studentData = {
+                firstName: data.firstName,
+                lastName: data.lastName,
+                admissionNumber: data.admissionNumber,
+                class: data.class,
+                dateOfBirth: data.dateOfBirth,
+                gender: data.gender,
+                guardianName: data.guardianName,
+                guardianRelation: data.guardianRelation,
+                guardianContact: data.guardianContact,
+                guardianEmail: data.guardianEmail,
+                address: data.address,
+                profilePhotoUrl,
+                createdAt: Timestamp.now(),
+                schoolId: state.user?.id || "unknown" // Link student to school
+            };
+            
+            await addDoc(collection(db, "students"), studentData);
+            
+            // Update class student count (in a real app)
+            // This would update the class document to increment the student count
+            
+            // Refresh the student list
+            fetchStudents();
+            
+            return true;
+        } catch (error: any) {
+            console.error("Error adding student:", error);
+            throw new Error(error.message || "Failed to add student");
+        }
+    };
+
+    const handleDeleteStudent = async (studentId: string) => {
+        try {
+            // Delete student document
+            await deleteDoc(doc(db, "students", studentId));
+            
+            // Refresh the student list
+            fetchStudents();
+            
             toast({
                 title: "Success",
-                description: "Student has been successfully added.",
+                description: "Student removed successfully",
             });
-        } catch (error: any) {
+        } catch (error) {
+            console.error("Error deleting student:", error);
             toast({
                 title: "Error",
-                description: error.message || "Failed to add student",
+                description: "Failed to delete student",
                 variant: "destructive",
             });
         }
     };
+
+    // Filter students based on search query and selected class
+    const filteredStudents = students.filter(student => {
+        const matchesSearch = searchQuery
+            ? `${student.firstName} ${student.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              student.admissionNumber.toLowerCase().includes(searchQuery.toLowerCase())
+            : true;
+            
+        const matchesClass = selectedClass === "all" 
+            ? true 
+            : student.class === selectedClass;
+            
+        return matchesSearch && matchesClass;
+    });
 
     return (
         <div className="container mx-auto p-6 space-y-6">
@@ -206,10 +334,18 @@ export default function StudentsPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 gap-4">
-                            <Input placeholder="Search by name..." />
-                            <Select>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+                                <Input 
+                                    placeholder="Search by name or admission number..."
+                                    className="pl-9"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                            <Select value={selectedClass} onValueChange={setSelectedClass}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Class" />
+                                    <SelectValue placeholder="Filter by class" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">All Classes</SelectItem>
@@ -243,11 +379,65 @@ export default function StudentsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            <TableRow>
-                                <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                                    No students found
-                                </TableCell>
-                            </TableRow>
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell colSpan={7} className="text-center py-6">
+                                        Loading students...
+                                    </TableCell>
+                                </TableRow>
+                            ) : filteredStudents.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                                        No students found
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                filteredStudents.map((student) => (
+                                    <TableRow key={student.id}>
+                                        <TableCell className="font-medium">
+                                            <div className="flex items-center gap-3">
+                                                <Avatar>
+                                                    {student.profilePhotoUrl ? (
+                                                        <AvatarImage src={student.profilePhotoUrl} alt={`${student.firstName} ${student.lastName}`} />
+                                                    ) : (
+                                                        <AvatarFallback>
+                                                            {student.firstName.charAt(0)}{student.lastName.charAt(0)}
+                                                        </AvatarFallback>
+                                                    )}
+                                                </Avatar>
+                                                {student.firstName} {student.lastName}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>{student.admissionNumber}</TableCell>
+                                        <TableCell>{student.className || 'Unknown Class'}</TableCell>
+                                        <TableCell>{student.guardianName}</TableCell>
+                                        <TableCell>{student.guardianContact}</TableCell>
+                                        <TableCell>
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                Active
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <Button variant="ghost" size="icon">
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon"
+                                                    onClick={() => {
+                                                        if (window.confirm(`Are you sure you want to delete ${student.firstName} ${student.lastName}?`)) {
+                                                            handleDeleteStudent(student.id);
+                                                        }
+                                                    }}
+                                                >
+                                                    <Trash className="h-4 w-4 text-destructive" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
                         </TableBody>
                     </Table>
                 </CardContent>
