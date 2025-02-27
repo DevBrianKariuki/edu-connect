@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,21 +28,46 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ImagePlus } from "lucide-react";
+import { ImagePlus, X, Calendar as CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+
+// Custom date validator for max date (today)
+const dateStringSchema = z
+    .string()
+    .min(1, "Date of birth is required")
+    .refine((date) => {
+        const selectedDate = new Date(date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset time to start of day
+        return !isNaN(selectedDate.getTime()) && selectedDate <= today;
+    }, "Date cannot be in the future");
 
 const studentFormSchema = z.object({
     firstName: z.string().min(2, "First name is required"),
     lastName: z.string().min(2, "Last name is required"),
     admissionNumber: z.string().min(1, "Admission number is required"),
     class: z.string().min(1, "Class is required"),
-    dateOfBirth: z.string().min(1, "Date of birth is required"),
+    dateOfBirth: dateStringSchema,
     gender: z.string().min(1, "Gender is required"),
     guardianName: z.string().min(2, "Guardian name is required"),
     guardianRelation: z.string().min(2, "Guardian relation is required"),
     guardianContact: z.string().min(10, "Valid contact number is required"),
     guardianEmail: z.string().email("Invalid email address"),
     address: z.string().min(5, "Address is required"),
-    profilePhoto: z.any().optional(),
+    profilePhoto: z
+        .instanceof(File)
+        .optional()
+        .refine(
+            (file) => !file || file.size <= 5 * 1024 * 1024,
+            "File size must be less than 5MB"
+        )
+        .refine(
+            (file) => !file || ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type),
+            "Only JPEG, JPG, PNG, and WEBP formats are supported"
+        ),
 });
 
 type StudentFormData = z.infer<typeof studentFormSchema>;
@@ -55,6 +81,7 @@ interface Props {
 
 export default function StudentFormDialog({ open, onOpenChange, onSubmit, classes }: Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [profilePreview, setProfilePreview] = useState<string | null>(null);
 
     const form = useForm<StudentFormData>({
         resolver: zodResolver(studentFormSchema),
@@ -78,6 +105,7 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
             setIsSubmitting(true);
             await onSubmit(data);
             form.reset();
+            setProfilePreview(null);
             onOpenChange(false);
         } catch (error) {
             console.error("Error submitting student form:", error);
@@ -86,8 +114,53 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
         }
     };
 
+    const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        
+        // Validate file type
+        if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+            form.setError('profilePhoto', { 
+                message: 'Only JPEG, JPG, PNG, and WEBP formats are supported' 
+            });
+            return;
+        }
+        
+        // Validate file size
+        if (file.size > 5 * 1024 * 1024) {
+            form.setError('profilePhoto', { 
+                message: 'File size must be less than 5MB' 
+            });
+            return;
+        }
+        
+        // Set file to form
+        form.setValue('profilePhoto', file);
+        
+        // Create and set preview
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            if (event.target?.result) {
+                setProfilePreview(event.target.result as string);
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const removeProfilePhoto = () => {
+        form.setValue('profilePhoto', undefined);
+        setProfilePreview(null);
+        form.clearErrors('profilePhoto');
+    };
+
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={(isOpen) => {
+            if (!isOpen) {
+                form.reset();
+                setProfilePreview(null);
+            }
+            onOpenChange(isOpen);
+        }}>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Add New Student</DialogTitle>
@@ -98,42 +171,47 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
                         <div className="flex justify-center">
-                            <FormField
-                                control={form.control}
-                                name="profilePhoto"
-                                render={({ field: { onChange, value, ...field } }) => (
-                                    <FormItem>
-                                        <FormLabel className="relative flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed rounded-full cursor-pointer hover:border-primary">
-                                            {value ? (
-                                                <img
-                                                    src={URL.createObjectURL(value)}
-                                                    alt="Profile preview"
-                                                    className="w-full h-full object-cover rounded-full"
-                                                />
-                                            ) : (
-                                                <div className="flex flex-col items-center justify-center text-muted-foreground">
-                                                    <ImagePlus className="w-8 h-8" />
-                                                    <span className="text-xs mt-2">Add Photo</span>
-                                                </div>
-                                            )}
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                className="hidden"
-                                                onChange={(e) => {
-                                                    const file = e.target.files?.[0];
-                                                    if (file) {
-                                                        onChange(file);
-                                                    }
-                                                }}
-                                                {...field}
-                                            />
-                                        </FormLabel>
-                                        <FormMessage />
-                                    </FormItem>
+                            <div className="relative">
+                                <div className={cn(
+                                    "flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed rounded-full cursor-pointer hover:border-primary transition-colors",
+                                    form.formState.errors.profilePhoto && "border-red-500"
+                                )}>
+                                    {profilePreview ? (
+                                        <img
+                                            src={profilePreview}
+                                            alt="Profile preview"
+                                            className="w-full h-full object-cover rounded-full"
+                                        />
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center text-muted-foreground">
+                                            <ImagePlus className="w-8 h-8" />
+                                            <span className="text-xs mt-2">Add Photo</span>
+                                        </div>
+                                    )}
+                                    <input
+                                        type="file"
+                                        id="profilePhoto"
+                                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        onChange={handleProfilePhotoChange}
+                                    />
+                                </div>
+                                {profilePreview && (
+                                    <button
+                                        type="button"
+                                        className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1"
+                                        onClick={removeProfilePhoto}
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
                                 )}
-                            />
+                            </div>
                         </div>
+                        {form.formState.errors.profilePhoto && (
+                            <p className="text-center text-sm font-medium text-[#ea384c]">
+                                {form.formState.errors.profilePhoto.message}
+                            </p>
+                        )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
@@ -145,7 +223,7 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                         <FormControl>
                                             <Input placeholder="John" {...field} />
                                         </FormControl>
-                                        <FormMessage />
+                                        <FormMessage className="text-[#ea384c]" />
                                     </FormItem>
                                 )}
                             />
@@ -158,7 +236,7 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                         <FormControl>
                                             <Input placeholder="Doe" {...field} />
                                         </FormControl>
-                                        <FormMessage />
+                                        <FormMessage className="text-[#ea384c]" />
                                     </FormItem>
                                 )}
                             />
@@ -171,7 +249,7 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                         <FormControl>
                                             <Input placeholder="2024001" {...field} />
                                         </FormControl>
-                                        <FormMessage />
+                                        <FormMessage className="text-[#ea384c]" />
                                     </FormItem>
                                 )}
                             />
@@ -198,7 +276,7 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        <FormMessage />
+                                        <FormMessage className="text-[#ea384c]" />
                                     </FormItem>
                                 )}
                             />
@@ -206,12 +284,49 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                 control={form.control}
                                 name="dateOfBirth"
                                 render={({ field }) => (
-                                    <FormItem>
+                                    <FormItem className="flex flex-col">
                                         <FormLabel>Date of Birth</FormLabel>
-                                        <FormControl>
-                                            <Input type="date" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <FormControl>
+                                                    <Button
+                                                        variant="outline"
+                                                        className={cn(
+                                                            "w-full pl-3 text-left font-normal",
+                                                            !field.value && "text-muted-foreground",
+                                                            form.formState.errors.dateOfBirth && "border-[#ea384c] focus-visible:ring-[#ea384c]"
+                                                        )}
+                                                    >
+                                                        {field.value ? (
+                                                            format(new Date(field.value), "PPP")
+                                                        ) : (
+                                                            <span>Select date</span>
+                                                        )}
+                                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                    </Button>
+                                                </FormControl>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={field.value ? new Date(field.value) : undefined}
+                                                    onSelect={(date) => {
+                                                        if (date) {
+                                                            field.onChange(format(date, "yyyy-MM-dd"));
+                                                        }
+                                                    }}
+                                                    disabled={(date) => {
+                                                        // Disable future dates
+                                                        const today = new Date();
+                                                        today.setHours(0, 0, 0, 0);
+                                                        return date > today;
+                                                    }}
+                                                    initialFocus
+                                                    className="border rounded-md shadow"
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                        <FormMessage className="text-[#ea384c]" />
                                     </FormItem>
                                 )}
                             />
@@ -236,7 +351,7 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                                 <SelectItem value="other">Other</SelectItem>
                                             </SelectContent>
                                         </Select>
-                                        <FormMessage />
+                                        <FormMessage className="text-[#ea384c]" />
                                     </FormItem>
                                 )}
                             />
@@ -254,7 +369,7 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                             <FormControl>
                                                 <Input placeholder="Jane Doe" {...field} />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-[#ea384c]" />
                                         </FormItem>
                                     )}
                                 />
@@ -267,7 +382,7 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                             <FormControl>
                                                 <Input placeholder="Mother" {...field} />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-[#ea384c]" />
                                         </FormItem>
                                     )}
                                 />
@@ -280,7 +395,7 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                             <FormControl>
                                                 <Input type="tel" placeholder="+1234567890" {...field} />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-[#ea384c]" />
                                         </FormItem>
                                     )}
                                 />
@@ -297,7 +412,7 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                                     {...field}
                                                 />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-[#ea384c]" />
                                         </FormItem>
                                     )}
                                 />
@@ -313,7 +428,7 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                     <FormControl>
                                         <Input placeholder="123 Main St, City, Country" {...field} />
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage className="text-[#ea384c]" />
                                 </FormItem>
                             )}
                         />
