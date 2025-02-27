@@ -60,7 +60,14 @@ const SettingsPage = () => {
     if (!state.user?.id) return;
 
     try {
-      await updateDoc(doc(db, "schools", state.user.id), schoolData);
+      // Fix: Use object literal directly to ensure correct type for updateDoc
+      await updateDoc(doc(db, "schools", state.user.id), {
+        name: schoolData.name,
+        location: schoolData.location,
+        phone: schoolData.phone,
+        email: schoolData.email
+      });
+      
       toast({
         title: "Settings saved",
         description: "Your settings have been saved successfully.",
