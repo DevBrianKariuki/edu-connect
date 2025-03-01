@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
 	Dialog,
 	DialogContent,
@@ -28,6 +28,8 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { ImagePlus, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase/config";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -68,12 +70,22 @@ interface StudentTransportFormDialogProps {
 	onSubmit: (data: StudentTransportFormData) => void;
 }
 
+interface ClassData {
+    id: string;
+    name: string;
+    capacity: number;
+    teacher: string;
+    students: number;
+}
+
 const StudentTransportFormDialog = ({
 	open,
 	onOpenChange,
 	onSubmit,
 }: StudentTransportFormDialogProps) => {
 	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+	const [classes, setClasses] = useState<ClassData[]>([]);
+	const [loading, setLoading] = useState(true);
 
 	const form = useForm<StudentTransportFormData>({
 		resolver: zodResolver(studentTransportFormSchema),
@@ -88,6 +100,36 @@ const StudentTransportFormDialog = ({
 			profilePic: undefined,
 		},
 	});
+
+	useEffect(() => {
+        const fetchClasses = async () => {
+            try {
+                setLoading(true);
+                const classesCollection = collection(db, "classes");
+                const classesSnapshot = await getDocs(classesCollection);
+                
+                const classesData: ClassData[] = [];
+                
+                classesSnapshot.forEach((doc) => {
+                    const data = doc.data() as Omit<ClassData, 'id'>;
+                    classesData.push({
+                        id: doc.id,
+                        ...data,
+                    });
+                });
+                
+                setClasses(classesData);
+            } catch (error) {
+                console.error("Error fetching classes:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (open) {
+            fetchClasses();
+        }
+    }, [open]);
 
 	const handleSubmit = (data: StudentTransportFormData) => {
 		onSubmit(data);
@@ -216,18 +258,17 @@ const StudentTransportFormDialog = ({
 											</SelectTrigger>
 										</FormControl>
 										<SelectContent>
-											<SelectItem value="Grade 5">
-												Grade 5
-											</SelectItem>
-											<SelectItem value="Grade 6">
-												Grade 6
-											</SelectItem>
-											<SelectItem value="Grade 7">
-												Grade 7
-											</SelectItem>
-											<SelectItem value="Grade 8">
-												Grade 8
-											</SelectItem>
+											{loading ? (
+												<SelectItem value="" disabled>Loading classes...</SelectItem>
+											) : classes.length === 0 ? (
+												<SelectItem value="" disabled>No classes available</SelectItem>
+											) : (
+												classes.map((classData) => (
+													<SelectItem key={classData.id} value={classData.id}>
+														{classData.name}
+													</SelectItem>
+												))
+											)}
 										</SelectContent>
 									</Select>
 									<FormMessage />

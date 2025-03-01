@@ -69,30 +69,6 @@ interface StudentData {
     createdAt: Timestamp;
 }
 
-const sampleClasses: ClassData[] = [
-    {
-        id: "1",
-        name: "Grade 1",
-        capacity: 30,
-        teacher: "Mrs. Johnson",
-        students: 25,
-    },
-    {
-        id: "2",
-        name: "Grade 2",
-        capacity: 30,
-        teacher: "Mr. Smith",
-        students: 28,
-    },
-    {
-        id: "3",
-        name: "Grade 3",
-        capacity: 35,
-        teacher: "Ms. Davis",
-        students: 32,
-    },
-];
-
 export default function StudentsPage() {
     const [showAddClassDialog, setShowAddClassDialog] = useState(false);
     const [showAddStudentDialog, setShowAddStudentDialog] = useState(false);
@@ -100,15 +76,47 @@ export default function StudentsPage() {
     const [newClassCapacity, setNewClassCapacity] = useState("");
     const [newClassTeacher, setNewClassTeacher] = useState("");
     const [students, setStudents] = useState<StudentData[]>([]);
+    const [classes, setClasses] = useState<ClassData[]>([]);
     const [loading, setLoading] = useState(true);
+    const [classesLoading, setClassesLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedClass, setSelectedClass] = useState("all");
     const { toast } = useToast();
     const { state } = useAuth();
 
     useEffect(() => {
+        fetchClasses();
         fetchStudents();
     }, []);
+
+    const fetchClasses = async () => {
+        try {
+            setClassesLoading(true);
+            const classesCollection = collection(db, "classes");
+            const classesSnapshot = await getDocs(classesCollection);
+            
+            const classesData: ClassData[] = [];
+            
+            classesSnapshot.forEach((doc) => {
+                const data = doc.data() as Omit<ClassData, 'id'>;
+                classesData.push({
+                    id: doc.id,
+                    ...data,
+                });
+            });
+            
+            setClasses(classesData);
+        } catch (error) {
+            console.error("Error fetching classes:", error);
+            toast({
+                title: "Error",
+                description: "Failed to load classes",
+                variant: "destructive",
+            });
+        } finally {
+            setClassesLoading(false);
+        }
+    };
 
     const fetchStudents = async () => {
         try {
@@ -120,12 +128,9 @@ export default function StudentsPage() {
             
             studentsSnapshot.forEach((doc) => {
                 const data = doc.data() as Omit<StudentData, 'id'>;
-                const classInfo = sampleClasses.find(c => c.id === data.class);
-                
                 studentsData.push({
                     id: doc.id,
                     ...data,
-                    className: classInfo?.name
                 });
             });
             
@@ -142,20 +147,64 @@ export default function StudentsPage() {
         }
     };
 
-    const handleAddClass = () => {
-        // Here you would typically make an API call to add the class
-        toast({
-            title: "Class Added",
-            description: `${newClassName} has been successfully added.`,
-        });
-        setShowAddClassDialog(false);
-        setNewClassName("");
-        setNewClassCapacity("");
-        setNewClassTeacher("");
+    const handleAddClass = async () => {
+        try {
+            if (!newClassName || !newClassCapacity || !newClassTeacher) {
+                toast({
+                    title: "Error",
+                    description: "Please fill in all fields",
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            // Add class to Firestore
+            const classData = {
+                name: newClassName,
+                capacity: parseInt(newClassCapacity),
+                teacher: newClassTeacher,
+                students: 0,
+                schoolId: state.user?.id || "unknown",
+                createdAt: Timestamp.now()
+            };
+            
+            await addDoc(collection(db, "classes"), classData);
+            
+            // Refresh classes
+            fetchClasses();
+            
+            toast({
+                title: "Class Added",
+                description: `${newClassName} has been successfully added.`,
+            });
+            
+            // Reset form and close dialog
+            setShowAddClassDialog(false);
+            setNewClassName("");
+            setNewClassCapacity("");
+            setNewClassTeacher("");
+        } catch (error) {
+            console.error("Error adding class:", error);
+            toast({
+                title: "Error",
+                description: "Failed to add class",
+                variant: "destructive",
+            });
+        }
     };
 
     const handleAddStudent = async (data: any) => {
         try {
+            // Check if a class has been selected
+            if (!data.class || data.class === "none") {
+                toast({
+                    title: "Error",
+                    description: "Please select a class for the student",
+                    variant: "destructive",
+                });
+                return false;
+            }
+            
             let profilePhotoUrl = "";
             
             // Upload profile photo if provided
@@ -165,12 +214,16 @@ export default function StudentsPage() {
                 profilePhotoUrl = await getDownloadURL(storageRef);
             }
             
+            // Get class name for better display
+            const selectedClass = classes.find(c => c.id === data.class);
+            
             // Add student data to Firestore
             const studentData = {
                 firstName: data.firstName,
                 lastName: data.lastName,
                 admissionNumber: data.admissionNumber,
                 class: data.class,
+                className: selectedClass?.name || "Unknown Class",
                 dateOfBirth: data.dateOfBirth,
                 gender: data.gender,
                 guardianName: data.guardianName,
@@ -185,8 +238,11 @@ export default function StudentsPage() {
             
             await addDoc(collection(db, "students"), studentData);
             
-            // Update class student count (in a real app)
-            // This would update the class document to increment the student count
+            // Update class student count
+            const classDoc = doc(db, "classes", data.class);
+            // In a real app, you would use a transaction to increment the student count
+            // For now, we'll just refresh the classes to get updated data
+            fetchClasses();
             
             // Refresh the student list
             fetchStudents();
@@ -232,6 +288,15 @@ export default function StudentsPage() {
             : student.class === selectedClass;
             
         return matchesSearch && matchesClass;
+    });
+
+    // Update student fields with class name for better display
+    const studentsWithClassNames = filteredStudents.map(student => {
+        const classInfo = classes.find(c => c.id === student.class);
+        return {
+            ...student,
+            className: classInfo?.name || student.className || "Unknown Class"
+        };
     });
 
     return (
@@ -291,7 +356,12 @@ export default function StudentsPage() {
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
-                    <Button onClick={() => setShowAddStudentDialog(true)}>Add Student</Button>
+                    <Button 
+                        onClick={() => setShowAddStudentDialog(true)}
+                        disabled={classes.length === 0}
+                    >
+                        Add Student
+                    </Button>
                 </div>
             </div>
 
@@ -302,28 +372,36 @@ export default function StudentsPage() {
                         <CardDescription>Manage your school classes</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Class Name</TableHead>
-                                    <TableHead>Capacity</TableHead>
-                                    <TableHead>Teacher</TableHead>
-                                    <TableHead>Students</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {sampleClasses.map((classData) => (
-                                    <TableRow key={classData.id}>
-                                        <TableCell className="font-medium">
-                                            {classData.name}
-                                        </TableCell>
-                                        <TableCell>{classData.capacity}</TableCell>
-                                        <TableCell>{classData.teacher}</TableCell>
-                                        <TableCell>{classData.students}</TableCell>
+                        {classesLoading ? (
+                            <div className="text-center py-6">Loading classes...</div>
+                        ) : classes.length === 0 ? (
+                            <div className="text-center py-6 text-muted-foreground">
+                                No classes found. Add your first class to get started.
+                            </div>
+                        ) : (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Class Name</TableHead>
+                                        <TableHead>Capacity</TableHead>
+                                        <TableHead>Teacher</TableHead>
+                                        <TableHead>Students</TableHead>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {classes.map((classData) => (
+                                        <TableRow key={classData.id}>
+                                            <TableCell className="font-medium">
+                                                {classData.name}
+                                            </TableCell>
+                                            <TableCell>{classData.capacity}</TableCell>
+                                            <TableCell>{classData.teacher}</TableCell>
+                                            <TableCell>{classData.students}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -349,7 +427,7 @@ export default function StudentsPage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">All Classes</SelectItem>
-                                    {sampleClasses.map((classData) => (
+                                    {classes.map((classData) => (
                                         <SelectItem key={classData.id} value={classData.id}>
                                             {classData.name}
                                         </SelectItem>
@@ -385,14 +463,16 @@ export default function StudentsPage() {
                                         Loading students...
                                     </TableCell>
                                 </TableRow>
-                            ) : filteredStudents.length === 0 ? (
+                            ) : studentsWithClassNames.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                                        No students found
+                                        {classes.length === 0 
+                                            ? "Add a class before adding students" 
+                                            : "No students found"}
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                filteredStudents.map((student) => (
+                                studentsWithClassNames.map((student) => (
                                     <TableRow key={student.id}>
                                         <TableCell className="font-medium">
                                             <div className="flex items-center gap-3">
@@ -409,7 +489,7 @@ export default function StudentsPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell>{student.admissionNumber}</TableCell>
-                                        <TableCell>{student.className || 'Unknown Class'}</TableCell>
+                                        <TableCell>{student.className}</TableCell>
                                         <TableCell>{student.guardianName}</TableCell>
                                         <TableCell>{student.guardianContact}</TableCell>
                                         <TableCell>
@@ -447,7 +527,7 @@ export default function StudentsPage() {
                 open={showAddStudentDialog}
                 onOpenChange={setShowAddStudentDialog}
                 onSubmit={handleAddStudent}
-                classes={sampleClasses}
+                classes={classes}
             />
         </div>
     );
