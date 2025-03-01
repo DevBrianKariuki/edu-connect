@@ -163,7 +163,6 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
         if (date) {
             form.setValue('dateOfBirth', format(date, "yyyy-MM-dd"));
             form.trigger('dateOfBirth');
-            setTimeout(() => setDatePickerOpen(false), 100);
         }
     };
 
@@ -278,11 +277,11 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                             defaultValue={field.value}
                                         >
                                             <FormControl>
-                                                <SelectTrigger className="bg-white">
+                                                <SelectTrigger>
                                                     <SelectValue placeholder="Select class" />
                                                 </SelectTrigger>
                                             </FormControl>
-                                            <SelectContent className="bg-white">
+                                            <SelectContent>
                                                 {classes.map((cls) => (
                                                     <SelectItem key={cls.id} value={cls.id}>
                                                         {cls.name}
@@ -306,7 +305,7 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                                     <Button
                                                         variant="outline"
                                                         className={cn(
-                                                            "w-full pl-3 text-left font-normal bg-white",
+                                                            "w-full pl-3 text-left font-normal",
                                                             !field.value && "text-muted-foreground",
                                                             form.formState.errors.dateOfBirth && "border-[#ea384c] focus-visible:ring-[#ea384c]"
                                                         )}
@@ -325,18 +324,20 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                                     </Button>
                                                 </FormControl>
                                             </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0 bg-background z-50" align="start">
+                                            <PopoverContent className="w-auto p-0 z-50" align="start">
                                                 <Calendar
                                                     mode="single"
                                                     selected={field.value ? new Date(field.value) : undefined}
-                                                    onSelect={handleDateSelect}
+                                                    onSelect={(date) => {
+                                                        handleDateSelect(date);
+                                                        setDatePickerOpen(false);
+                                                    }}
                                                     disabled={(date) => {
                                                         const today = new Date();
                                                         today.setHours(0, 0, 0, 0);
                                                         return date > today;
                                                     }}
                                                     initialFocus
-                                                    className="border rounded-md shadow"
                                                 />
                                             </PopoverContent>
                                         </Popover>
@@ -355,11 +356,11 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                             defaultValue={field.value}
                                         >
                                             <FormControl>
-                                                <SelectTrigger className="bg-white">
+                                                <SelectTrigger>
                                                     <SelectValue placeholder="Select gender" />
                                                 </SelectTrigger>
                                             </FormControl>
-                                            <SelectContent className="bg-white">
+                                            <SelectContent>
                                                 <SelectItem value="male">Male</SelectItem>
                                                 <SelectItem value="female">Female</SelectItem>
                                                 <SelectItem value="other">Other</SelectItem>

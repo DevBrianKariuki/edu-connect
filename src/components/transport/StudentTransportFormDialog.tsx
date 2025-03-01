@@ -211,11 +211,11 @@ const StudentTransportFormDialog = ({
 										onValueChange={field.onChange}
 										defaultValue={field.value}>
 										<FormControl>
-											<SelectTrigger className="bg-white">
+											<SelectTrigger>
 												<SelectValue placeholder="Select class" />
 											</SelectTrigger>
 										</FormControl>
-										<SelectContent className="bg-white">
+										<SelectContent>
 											<SelectItem value="Grade 5">
 												Grade 5
 											</SelectItem>
@@ -244,11 +244,11 @@ const StudentTransportFormDialog = ({
 										onValueChange={field.onChange}
 										defaultValue={field.value}>
 										<FormControl>
-											<SelectTrigger className="bg-white">
+											<SelectTrigger>
 												<SelectValue placeholder="Select route" />
 											</SelectTrigger>
 										</FormControl>
-										<SelectContent className="bg-white">
+										<SelectContent>
 											<SelectItem value="Route A">
 												Route A
 											</SelectItem>
@@ -271,11 +271,11 @@ const StudentTransportFormDialog = ({
 										onValueChange={field.onChange}
 										defaultValue={field.value}>
 										<FormControl>
-											<SelectTrigger className="bg-white">
+											<SelectTrigger>
 												<SelectValue placeholder="Select bus" />
 											</SelectTrigger>
 										</FormControl>
-										<SelectContent className="bg-white">
+										<SelectContent>
 											<SelectItem value="KCB 123X">
 												KCB 123X
 											</SelectItem>
