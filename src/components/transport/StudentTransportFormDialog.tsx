@@ -86,10 +86,11 @@ const StudentTransportFormDialog = ({
 	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 	const [classes, setClasses] = useState<ClassData[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [savedFormState, setSavedFormState] = useState<any>(null);
 
 	const form = useForm<StudentTransportFormData>({
 		resolver: zodResolver(studentTransportFormSchema),
-		defaultValues: {
+		defaultValues: savedFormState || {
 			name: "",
 			class: "",
 			route: "",
@@ -100,6 +101,20 @@ const StudentTransportFormDialog = ({
 			profilePic: undefined,
 		},
 	});
+
+	useEffect(() => {
+		// When the dialog opens, restore saved state if available
+		if (open && savedFormState) {
+			Object.entries(savedFormState).forEach(([key, value]) => {
+				form.setValue(key as any, value);
+			});
+			
+			// If there was a saved preview URL, restore it
+			if (savedFormState.previewUrl) {
+				setPreviewUrl(savedFormState.previewUrl);
+			}
+		}
+	}, [open, form, savedFormState]);
 
 	useEffect(() => {
         const fetchClasses = async () => {
@@ -135,6 +150,7 @@ const StudentTransportFormDialog = ({
 		onSubmit(data);
 		form.reset();
 		setPreviewUrl(null);
+		setSavedFormState(null);
 	};
 
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, onChange: (value: any) => void) => {
@@ -170,12 +186,16 @@ const StudentTransportFormDialog = ({
 	return (
 		<Dialog open={open} onOpenChange={(newOpen) => {
 			if (!newOpen) {
-				form.reset();
-				setPreviewUrl(null);
+				// Save form state when dialog is closed
+				const currentValues = form.getValues();
+				setSavedFormState({
+					...currentValues,
+					previewUrl: previewUrl
+				});
 			}
 			onOpenChange(newOpen);
 		}}>
-			<DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+			<DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
 				<DialogHeader>
 					<DialogTitle>Add Transport Student</DialogTitle>
 				</DialogHeader>
@@ -253,7 +273,7 @@ const StudentTransportFormDialog = ({
 										onValueChange={field.onChange}
 										defaultValue={field.value}>
 										<FormControl>
-											<SelectTrigger className="bg-transparent">
+											<SelectTrigger>
 												<SelectValue placeholder="Select class" />
 											</SelectTrigger>
 										</FormControl>
@@ -285,7 +305,7 @@ const StudentTransportFormDialog = ({
 										onValueChange={field.onChange}
 										defaultValue={field.value}>
 										<FormControl>
-											<SelectTrigger className="bg-transparent">
+											<SelectTrigger>
 												<SelectValue placeholder="Select route" />
 											</SelectTrigger>
 										</FormControl>
@@ -312,7 +332,7 @@ const StudentTransportFormDialog = ({
 										onValueChange={field.onChange}
 										defaultValue={field.value}>
 										<FormControl>
-											<SelectTrigger className="bg-transparent">
+											<SelectTrigger>
 												<SelectValue placeholder="Select bus" />
 											</SelectTrigger>
 										</FormControl>
@@ -373,8 +393,12 @@ const StudentTransportFormDialog = ({
 								type="button"
 								variant="outline"
 								onClick={() => {
-									form.reset();
-									setPreviewUrl(null);
+									// Save form state when canceling
+									const currentValues = form.getValues();
+									setSavedFormState({
+										...currentValues,
+										previewUrl: previewUrl
+									});
 									onOpenChange(false);
 								}}>
 								Cancel

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Dialog,
     DialogContent,
@@ -94,10 +94,13 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formSubmitError, setFormSubmitError] = useState<string | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    
+    // Create a state to store form data when dialog closes
+    const [savedFormState, setSavedFormState] = useState<any>(null);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
-        defaultValues: {
+        defaultValues: savedFormState || {
             firstName: "",
             lastName: "",
             admissionNumber: "",
@@ -113,6 +116,20 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
         },
     });
 
+    // When the dialog opens, restore saved state if available
+    useEffect(() => {
+        if (open && savedFormState) {
+            Object.entries(savedFormState).forEach(([key, value]) => {
+                form.setValue(key as any, value);
+            });
+            
+            // If there was a saved preview URL, restore it
+            if (savedFormState.previewUrl) {
+                setPreviewUrl(savedFormState.previewUrl);
+            }
+        }
+    }, [open, form, savedFormState]);
+
     const handleFormSubmit = async (values: z.infer<typeof formSchema>) => {
         setIsSubmitting(true);
         setFormSubmitError(null);
@@ -122,6 +139,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
             if (success) {
                 form.reset();
                 setPreviewUrl(null);
+                setSavedFormState(null);
                 onOpenChange(false);
             }
         } catch (error: any) {
@@ -166,14 +184,17 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
             open={open}
             onOpenChange={(newOpen) => {
                 if (!newOpen) {
-                    form.reset();
-                    setPreviewUrl(null);
-                    setFormSubmitError(null);
+                    // Save form state when dialog is closed
+                    const currentValues = form.getValues();
+                    setSavedFormState({
+                        ...currentValues,
+                        previewUrl: previewUrl
+                    });
                 }
                 onOpenChange(newOpen);
             }}
         >
-            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Add New Student</DialogTitle>
                 </DialogHeader>
@@ -281,7 +302,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                         defaultValue={field.value}
                                     >
                                         <FormControl>
-                                            <SelectTrigger className="bg-transparent">
+                                            <SelectTrigger>
                                                 <SelectValue placeholder="Select class" />
                                             </SelectTrigger>
                                         </FormControl>
@@ -320,7 +341,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                                     <Button
                                                         variant={"outline"}
                                                         className={cn(
-                                                            "pl-3 text-left font-normal bg-transparent",
+                                                            "pl-3 text-left font-normal",
                                                             !field.value && "text-muted-foreground"
                                                         )}
                                                     >
@@ -337,7 +358,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                                 <Calendar
                                                     mode="single"
                                                     selected={field.value}
-                                                    onSelect={field.onChange}
+                                                    onSelect={(date) => date && field.onChange(date)}
                                                     disabled={(date) =>
                                                         date > new Date() || date < new Date("1900-01-01")
                                                     }
@@ -361,7 +382,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                             defaultValue={field.value}
                                         >
                                             <FormControl>
-                                                <SelectTrigger className="bg-transparent">
+                                                <SelectTrigger>
                                                     <SelectValue placeholder="Select gender" />
                                                 </SelectTrigger>
                                             </FormControl>
@@ -403,7 +424,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                             defaultValue={field.value}
                                         >
                                             <FormControl>
-                                                <SelectTrigger className="bg-transparent">
+                                                <SelectTrigger>
                                                     <SelectValue placeholder="Select relation" />
                                                 </SelectTrigger>
                                             </FormControl>
@@ -471,8 +492,12 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                 type="button"
                                 variant="outline"
                                 onClick={() => {
-                                    form.reset();
-                                    setPreviewUrl(null);
+                                    // Save form state when canceling
+                                    const currentValues = form.getValues();
+                                    setSavedFormState({
+                                        ...currentValues,
+                                        previewUrl: previewUrl
+                                    });
                                     onOpenChange(false);
                                 }}
                             >
