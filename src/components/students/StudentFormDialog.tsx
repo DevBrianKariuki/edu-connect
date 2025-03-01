@@ -281,7 +281,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                         defaultValue={field.value}
                                     >
                                         <FormControl>
-                                            <SelectTrigger>
+                                            <SelectTrigger className="bg-transparent">
                                                 <SelectValue placeholder="Select class" />
                                             </SelectTrigger>
                                         </FormControl>
@@ -320,7 +320,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                                     <Button
                                                         variant={"outline"}
                                                         className={cn(
-                                                            "pl-3 text-left font-normal",
+                                                            "pl-3 text-left font-normal bg-transparent",
                                                             !field.value && "text-muted-foreground"
                                                         )}
                                                     >
@@ -361,7 +361,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                             defaultValue={field.value}
                                         >
                                             <FormControl>
-                                                <SelectTrigger>
+                                                <SelectTrigger className="bg-transparent">
                                                     <SelectValue placeholder="Select gender" />
                                                 </SelectTrigger>
                                             </FormControl>
@@ -403,7 +403,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                             defaultValue={field.value}
                                         >
                                             <FormControl>
-                                                <SelectTrigger>
+                                                <SelectTrigger className="bg-transparent">
                                                     <SelectValue placeholder="Select relation" />
                                                 </SelectTrigger>
                                             </FormControl>
