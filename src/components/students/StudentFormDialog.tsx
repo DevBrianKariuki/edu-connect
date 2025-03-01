@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -35,14 +34,13 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 
-// Custom date validator for max date (today)
 const dateStringSchema = z
     .string()
     .min(1, "Date of birth is required")
     .refine((date) => {
         const selectedDate = new Date(date);
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // Reset time to start of day
+        today.setHours(0, 0, 0, 0);
         return !isNaN(selectedDate.getTime()) && selectedDate <= today;
     }, "Date cannot be in the future");
 
@@ -130,7 +128,6 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
         const file = e.target.files?.[0];
         if (!file) return;
         
-        // Validate file type
         if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
             form.setError('profilePhoto', { 
                 message: 'Only JPEG, JPG, PNG, and WEBP formats are supported' 
@@ -138,7 +135,6 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
             return;
         }
         
-        // Validate file size
         if (file.size > 5 * 1024 * 1024) {
             form.setError('profilePhoto', { 
                 message: 'File size must be less than 5MB' 
@@ -146,10 +142,8 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
             return;
         }
         
-        // Set file to form
         form.setValue('profilePhoto', file);
         
-        // Create and set preview
         const reader = new FileReader();
         reader.onload = (event) => {
             if (event.target?.result) {
@@ -168,7 +162,8 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
     const handleDateSelect = (date: Date | undefined) => {
         if (date) {
             form.setValue('dateOfBirth', format(date, "yyyy-MM-dd"));
-            setTimeout(() => setDatePickerOpen(false), 100); // Close popover after selection
+            form.trigger('dateOfBirth');
+            setTimeout(() => setDatePickerOpen(false), 100);
         }
     };
 
@@ -283,11 +278,11 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                             defaultValue={field.value}
                                         >
                                             <FormControl>
-                                                <SelectTrigger>
+                                                <SelectTrigger className="bg-white">
                                                     <SelectValue placeholder="Select class" />
                                                 </SelectTrigger>
                                             </FormControl>
-                                            <SelectContent>
+                                            <SelectContent className="bg-white">
                                                 {classes.map((cls) => (
                                                     <SelectItem key={cls.id} value={cls.id}>
                                                         {cls.name}
@@ -311,11 +306,14 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                                     <Button
                                                         variant="outline"
                                                         className={cn(
-                                                            "w-full pl-3 text-left font-normal",
+                                                            "w-full pl-3 text-left font-normal bg-white",
                                                             !field.value && "text-muted-foreground",
                                                             form.formState.errors.dateOfBirth && "border-[#ea384c] focus-visible:ring-[#ea384c]"
                                                         )}
-                                                        onClick={() => setDatePickerOpen(true)}
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            setDatePickerOpen(true);
+                                                        }}
                                                         type="button"
                                                     >
                                                         {field.value ? (
@@ -327,13 +325,12 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                                     </Button>
                                                 </FormControl>
                                             </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0 bg-white" align="start">
+                                            <PopoverContent className="w-auto p-0 bg-background z-50" align="start">
                                                 <Calendar
                                                     mode="single"
                                                     selected={field.value ? new Date(field.value) : undefined}
                                                     onSelect={handleDateSelect}
                                                     disabled={(date) => {
-                                                        // Disable future dates
                                                         const today = new Date();
                                                         today.setHours(0, 0, 0, 0);
                                                         return date > today;
@@ -358,11 +355,11 @@ export default function StudentFormDialog({ open, onOpenChange, onSubmit, classe
                                             defaultValue={field.value}
                                         >
                                             <FormControl>
-                                                <SelectTrigger>
+                                                <SelectTrigger className="bg-white">
                                                     <SelectValue placeholder="Select gender" />
                                                 </SelectTrigger>
                                             </FormControl>
-                                            <SelectContent>
+                                            <SelectContent className="bg-white">
                                                 <SelectItem value="male">Male</SelectItem>
                                                 <SelectItem value="female">Female</SelectItem>
                                                 <SelectItem value="other">Other</SelectItem>
