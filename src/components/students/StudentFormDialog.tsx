@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
     Dialog,
@@ -22,6 +21,7 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
+    FormDescription,
 } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -51,6 +51,39 @@ interface StudentFormDialogProps {
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
+// Custom phone validator for Kenyan numbers
+const validateKenyanPhone = (phone: string) => {
+    // Remove spaces, dashes and other formatting
+    const cleanPhone = phone.replace(/\s+|-|\(|\)/g, '');
+    
+    // Check if it's a valid Kenyan number format
+    // Either starts with +254, or 0, followed by 9 digits
+    const kenyanRegex = /^(?:\+254|0)([17]\d{8}|[2-9]\d{7})$/;
+    
+    return kenyanRegex.test(cleanPhone);
+};
+
+// Function to format phone numbers to Kenyan format
+const formatToKenyanPhone = (phone: string): string => {
+    if (!phone) return phone;
+    
+    // Clean the phone number
+    const cleanPhone = phone.replace(/\s+|-|\(|\)/g, '');
+    
+    // If it already has the +254 prefix, return it
+    if (cleanPhone.startsWith('+254')) {
+        return cleanPhone;
+    }
+    
+    // If it starts with 0, replace with +254
+    if (cleanPhone.startsWith('0')) {
+        return '+254' + cleanPhone.substring(1);
+    }
+    
+    // Otherwise assume it's a number without prefix and add +254
+    return '+254' + cleanPhone;
+};
+
 const formSchema = z.object({
     firstName: z
         .string()
@@ -68,7 +101,11 @@ const formSchema = z.object({
     gender: z.string().min(1, "Gender is required"),
     guardianName: z.string().min(1, "Guardian name is required"),
     guardianRelation: z.string().min(1, "Relation is required"),
-    guardianContact: z.string().min(1, "Contact is required"),
+    guardianContact: z.string()
+        .min(1, "Contact is required")
+        .refine(validateKenyanPhone, {
+            message: "Please enter a valid Kenyan phone number (+254XXXXXXXXX or 07XXXXXXXX)"
+        }),
     guardianEmail: z.string().email("Invalid email").optional().or(z.literal("")),
     address: z.string().min(1, "Address is required"),
     profilePhoto: z
@@ -140,7 +177,13 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
         setFormSubmitError(null);
 
         try {
-            const success = await onSubmit(values);
+            // Format the phone number to Kenyan format before submission
+            const formattedValues = {
+                ...values,
+                guardianContact: formatToKenyanPhone(values.guardianContact),
+            };
+
+            const success = await onSubmit(formattedValues);
             if (success) {
                 form.reset();
                 setPreviewUrl(null);
@@ -199,7 +242,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                 onOpenChange(newOpen);
             }}
         >
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Add New Student</DialogTitle>
                 </DialogHeader>
@@ -459,8 +502,14 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                     <FormItem>
                                         <FormLabel>Contact</FormLabel>
                                         <FormControl>
-                                            <Input {...field} />
+                                            <Input 
+                                                {...field} 
+                                                placeholder="+254 7XX XXX XXX"
+                                            />
                                         </FormControl>
+                                        <FormDescription className="text-xs">
+                                            Enter a valid Kenyan phone number (e.g., 0712345678 or +254712345678)
+                                        </FormDescription>
                                         <FormMessage />
                                     </FormItem>
                                 )}

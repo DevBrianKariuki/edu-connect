@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
 	Dialog,
@@ -22,6 +21,7 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
+	FormDescription,
 } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -33,6 +33,28 @@ import { db } from "@/lib/firebase/config";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+const validateKenyanPhone = (phone: string) => {
+    const cleanPhone = phone.replace(/\s+|-|\(|\)/g, '');
+    const kenyanRegex = /^(?:\+254|0)([17]\d{8}|[2-9]\d{7})$/;
+    return kenyanRegex.test(cleanPhone);
+};
+
+const formatToKenyanPhone = (phone: string): string => {
+    if (!phone) return phone;
+    
+    const cleanPhone = phone.replace(/\s+|-|\(|\)/g, '');
+    
+    if (cleanPhone.startsWith('+254')) {
+        return cleanPhone;
+    }
+    
+    if (cleanPhone.startsWith('0')) {
+        return '+254' + cleanPhone.substring(1);
+    }
+    
+    return '+254' + cleanPhone;
+};
 
 const studentTransportFormSchema = z.object({
 	name: z
@@ -46,8 +68,10 @@ const studentTransportFormSchema = z.object({
 	dropoffPoint: z.string().min(3, "Drop-off point must be at least 3 characters"),
 	guardianContact: z
 		.string()
-		.min(10, "Contact number must be at least 10 digits")
-		.regex(/^[+]?[0-9\s-]+$/, "Invalid phone number format"),
+		.min(1, "Contact is required")
+		.refine(validateKenyanPhone, {
+            message: "Please enter a valid Kenyan phone number (+254XXXXXXXXX or 07XXXXXXXX)"
+        }),
 	profilePic: z
 		.any()
 		.refine((file) => !file || file instanceof File, "Please upload a valid file")
@@ -103,13 +127,11 @@ const StudentTransportFormDialog = ({
 	});
 
 	useEffect(() => {
-		// When the dialog opens, restore saved state if available
 		if (open && savedFormState) {
 			Object.entries(savedFormState).forEach(([key, value]) => {
 				form.setValue(key as any, value);
 			});
 			
-			// If there was a saved preview URL, restore it
 			if (savedFormState.previewUrl) {
 				setPreviewUrl(savedFormState.previewUrl);
 			}
@@ -117,37 +139,42 @@ const StudentTransportFormDialog = ({
 	}, [open, form, savedFormState]);
 
 	useEffect(() => {
-        const fetchClasses = async () => {
-            try {
-                setLoading(true);
-                const classesCollection = collection(db, "classes");
-                const classesSnapshot = await getDocs(classesCollection);
-                
-                const classesData: ClassData[] = [];
-                
-                classesSnapshot.forEach((doc) => {
-                    const data = doc.data() as Omit<ClassData, 'id'>;
-                    classesData.push({
-                        id: doc.id,
-                        ...data,
-                    });
-                });
-                
-                setClasses(classesData);
-            } catch (error) {
-                console.error("Error fetching classes:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+		const fetchClasses = async () => {
+			try {
+				setLoading(true);
+				const classesCollection = collection(db, "classes");
+				const classesSnapshot = await getDocs(classesCollection);
+				
+				const classesData: ClassData[] = [];
+				
+				classesSnapshot.forEach((doc) => {
+					const data = doc.data() as Omit<ClassData, 'id'>;
+					classesData.push({
+						id: doc.id,
+						...data,
+					});
+				});
+				
+				setClasses(classesData);
+			} catch (error) {
+				console.error("Error fetching classes:", error);
+			} finally {
+				setLoading(false);
+			}
+		};
 
-        if (open) {
-            fetchClasses();
-        }
-    }, [open]);
+		if (open) {
+			fetchClasses();
+		}
+	}, [open]);
 
 	const handleSubmit = (data: StudentTransportFormData) => {
-		onSubmit(data);
+		const formattedData = {
+			...data,
+			guardianContact: formatToKenyanPhone(data.guardianContact),
+		};
+		
+		onSubmit(formattedData);
 		form.reset();
 		setPreviewUrl(null);
 		setSavedFormState(null);
@@ -157,7 +184,6 @@ const StudentTransportFormDialog = ({
 		const file = e.target.files?.[0];
 		if (!file) return;
 
-		// Validate file type and size
 		if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
 			form.setError("profilePic", { 
 				message: "Only .jpg, .jpeg, .png and .webp files are accepted" 
@@ -172,7 +198,6 @@ const StudentTransportFormDialog = ({
 			return;
 		}
 
-		// Create preview
 		const url = URL.createObjectURL(file);
 		setPreviewUrl(url);
 		onChange(file);
@@ -186,7 +211,6 @@ const StudentTransportFormDialog = ({
 	return (
 		<Dialog open={open} onOpenChange={(newOpen) => {
 			if (!newOpen) {
-				// Save form state when dialog is closed
 				const currentValues = form.getValues();
 				setSavedFormState({
 					...currentValues,
@@ -195,7 +219,7 @@ const StudentTransportFormDialog = ({
 			}
 			onOpenChange(newOpen);
 		}}>
-			<DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+			<DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
 				<DialogHeader>
 					<DialogTitle>Add Transport Student</DialogTitle>
 				</DialogHeader>
@@ -204,7 +228,6 @@ const StudentTransportFormDialog = ({
 						onSubmit={form.handleSubmit(handleSubmit)}
 						className="space-y-4">
 						
-						{/* Profile Picture Upload */}
 						<div className="flex justify-center mb-4">
 							<FormField
 								control={form.control}
@@ -382,8 +405,11 @@ const StudentTransportFormDialog = ({
 								<FormItem>
 									<FormLabel>Guardian Contact</FormLabel>
 									<FormControl>
-										<Input {...field} placeholder="E.g., +254 712 345 678" />
+										<Input {...field} placeholder="+254 7XX XXX XXX" />
 									</FormControl>
+									<FormDescription className="text-xs">
+                                        Enter a valid Kenyan phone number (e.g., 0712345678 or +254712345678)
+                                    </FormDescription>
 									<FormMessage />
 								</FormItem>
 							)}
@@ -393,7 +419,6 @@ const StudentTransportFormDialog = ({
 								type="button"
 								variant="outline"
 								onClick={() => {
-									// Save form state when canceling
 									const currentValues = form.getValues();
 									setSavedFormState({
 										...currentValues,
