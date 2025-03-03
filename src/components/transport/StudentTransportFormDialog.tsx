@@ -27,10 +27,14 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { ImagePlus, X } from "lucide-react";
+import { CalendarIcon, ImagePlus, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -73,6 +77,9 @@ const studentTransportFormSchema = z.object({
 		.refine(validateKenyanPhone, {
             message: "Please enter a valid Kenyan phone number (+254XXXXXXXXX or 07XXXXXXXX)"
         }),
+	dateOfBirth: z.date({
+		required_error: "Date of birth is required",
+	}),
 	profilePic: z
 		.any()
 		.refine((file) => !file || file instanceof File, "Please upload a valid file")
@@ -123,6 +130,7 @@ const StudentTransportFormDialog = ({
 			pickupPoint: "",
 			dropoffPoint: "",
 			guardianContact: "",
+			dateOfBirth: undefined,
 			profilePic: undefined,
 		},
 	});
@@ -147,7 +155,12 @@ const StudentTransportFormDialog = ({
 			    // Skip profilePic as it needs special handling
                 if (key === 'profilePic') return;
                 
-				form.setValue(key as any, value);
+                // Handle date conversion
+                if (key === 'dateOfBirth' && value) {
+                    form.setValue(key as any, new Date(value as string));
+                } else {
+                    form.setValue(key as any, value);
+                }
 			});
 			
 			if (savedFormState.previewUrl) {
@@ -323,6 +336,49 @@ const StudentTransportFormDialog = ({
 								</FormItem>
 							)}
 						/>
+						
+						<FormField
+							control={form.control}
+							name="dateOfBirth"
+							render={({ field }) => (
+								<FormItem className="flex flex-col">
+									<FormLabel>Date of Birth</FormLabel>
+									<Popover>
+										<PopoverTrigger asChild>
+											<FormControl>
+												<Button
+													variant={"outline"}
+													className={cn(
+														"w-full pl-3 text-left font-normal",
+														!field.value && "text-muted-foreground"
+													)}
+												>
+													{field.value ? (
+														format(field.value, "PPP")
+													) : (
+														<span>Pick a date</span>
+													)}
+													<CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+												</Button>
+											</FormControl>
+										</PopoverTrigger>
+										<PopoverContent className="w-auto p-0" align="start">
+											<Calendar
+												mode="single"
+												selected={field.value}
+												onSelect={field.onChange}
+												disabled={(date) =>
+													date > new Date() || date < new Date("1900-01-01")
+												}
+												initialFocus
+											/>
+										</PopoverContent>
+									</Popover>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						
 						<FormField
 							control={form.control}
 							name="class"
