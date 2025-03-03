@@ -51,36 +51,21 @@ interface StudentFormDialogProps {
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
-// Custom phone validator for Kenyan numbers
 const validateKenyanPhone = (phone: string) => {
-    // Remove spaces, dashes and other formatting
     const cleanPhone = phone.replace(/\s+|-|\(|\)/g, '');
-    
-    // Check if it's a valid Kenyan number format
-    // Either starts with +254, or 0, followed by 9 digits
     const kenyanRegex = /^(?:\+254|0)([17]\d{8}|[2-9]\d{7})$/;
-    
     return kenyanRegex.test(cleanPhone);
 };
 
-// Function to format phone numbers to Kenyan format
 const formatToKenyanPhone = (phone: string): string => {
     if (!phone) return phone;
-    
-    // Clean the phone number
     const cleanPhone = phone.replace(/\s+|-|\(|\)/g, '');
-    
-    // If it already has the +254 prefix, return it
     if (cleanPhone.startsWith('+254')) {
         return cleanPhone;
     }
-    
-    // If it starts with 0, replace with +254
     if (cleanPhone.startsWith('0')) {
         return '+254' + cleanPhone.substring(1);
     }
-    
-    // Otherwise assume it's a number without prefix and add +254
     return '+254' + cleanPhone;
 };
 
@@ -132,7 +117,6 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
     const [formSubmitError, setFormSubmitError] = useState<string | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     
-    // Create a state to store form data when dialog closes
     const [savedFormState, setSavedFormState] = useState<any>(null);
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -153,11 +137,15 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
         },
     });
 
-    // When the dialog opens, restore saved state if available
     useEffect(() => {
         if (open && savedFormState) {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+            
             Object.entries(savedFormState).forEach(([key, value]) => {
-                // Special handling for Date objects
+                if (key === 'profilePhoto') return;
+                
                 if (key === 'dateOfBirth' && value) {
                     form.setValue(key as any, new Date(value as string));
                 } else {
@@ -165,19 +153,29 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                 }
             });
             
-            // If there was a saved preview URL, restore it
             if (savedFormState.previewUrl) {
                 setPreviewUrl(savedFormState.previewUrl);
             }
+            
+            if (savedFormState.profilePhoto instanceof File) {
+                form.setValue('profilePhoto', savedFormState.profilePhoto);
+            }
         }
     }, [open, form, savedFormState]);
+
+    useEffect(() => {
+        return () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+        };
+    }, []);
 
     const handleFormSubmit = async (values: z.infer<typeof formSchema>) => {
         setIsSubmitting(true);
         setFormSubmitError(null);
 
         try {
-            // Format the phone number to Kenyan format before submission
             const formattedValues = {
                 ...values,
                 guardianContact: formatToKenyanPhone(values.guardianContact),
@@ -186,7 +184,10 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
             const success = await onSubmit(formattedValues);
             if (success) {
                 form.reset();
-                setPreviewUrl(null);
+                if (previewUrl) {
+                    URL.revokeObjectURL(previewUrl);
+                    setPreviewUrl(null);
+                }
                 setSavedFormState(null);
                 onOpenChange(false);
             }
@@ -201,7 +202,10 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Validate file type and size
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+        }
+
         if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
             form.setError("profilePhoto", { 
                 message: "Only .jpg, .jpeg, .png and .webp files are accepted" 
@@ -216,7 +220,6 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
             return;
         }
 
-        // Create preview
         const url = URL.createObjectURL(file);
         setPreviewUrl(url);
         onChange(file);
@@ -224,7 +227,10 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
 
     const removeProfilePhoto = () => {
         form.setValue("profilePhoto", undefined);
-        setPreviewUrl(null);
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
+        }
     };
 
     return (
@@ -232,7 +238,6 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
             open={open}
             onOpenChange={(newOpen) => {
                 if (!newOpen) {
-                    // Save form state when dialog is closed
                     const currentValues = form.getValues();
                     setSavedFormState({
                         ...currentValues,
@@ -249,7 +254,6 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
-                        {/* Profile Picture Upload */}
                         <div className="flex justify-center mb-4">
                             <FormField
                                 control={form.control}
@@ -261,6 +265,9 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                                 <div className="relative">
                                                     <Avatar className="w-24 h-24">
                                                         <AvatarImage src={previewUrl} alt="Preview" />
+                                                        <AvatarFallback>
+                                                            {form.getValues().firstName?.[0]}{form.getValues().lastName?.[0]}
+                                                        </AvatarFallback>
                                                     </Avatar>
                                                     <button 
                                                         type="button"
@@ -347,7 +354,6 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                     <FormLabel>Class</FormLabel>
                                     <Select
                                         onValueChange={field.onChange}
-                                        defaultValue={field.value}
                                         value={field.value}
                                     >
                                         <FormControl>
@@ -407,11 +413,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                                 <Calendar
                                                     mode="single"
                                                     selected={field.value}
-                                                    onSelect={(date) => {
-                                                        if (date) {
-                                                            field.onChange(date);
-                                                        }
-                                                    }}
+                                                    onSelect={field.onChange}
                                                     disabled={(date) =>
                                                         date > new Date() || date < new Date("1900-01-01")
                                                     }
@@ -432,7 +434,6 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                         <FormLabel>Gender</FormLabel>
                                         <Select
                                             onValueChange={field.onChange}
-                                            defaultValue={field.value}
                                             value={field.value}
                                         >
                                             <FormControl>
@@ -475,7 +476,6 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                         <FormLabel>Relation</FormLabel>
                                         <Select
                                             onValueChange={field.onChange}
-                                            defaultValue={field.value}
                                             value={field.value}
                                         >
                                             <FormControl>
@@ -553,7 +553,6 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                 type="button"
                                 variant="outline"
                                 onClick={() => {
-                                    // Save form state when canceling
                                     const currentValues = form.getValues();
                                     setSavedFormState({
                                         ...currentValues,

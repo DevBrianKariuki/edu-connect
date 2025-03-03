@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
 	Dialog,
@@ -126,15 +127,37 @@ const StudentTransportFormDialog = ({
 		},
 	});
 
+	// Clean up preview URL when component unmounts
+    useEffect(() => {
+        return () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+        };
+    }, []);
+
 	useEffect(() => {
 		if (open && savedFormState) {
+		    // Clean up previous preview URL if it exists
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+            
 			Object.entries(savedFormState).forEach(([key, value]) => {
+			    // Skip profilePic as it needs special handling
+                if (key === 'profilePic') return;
+                
 				form.setValue(key as any, value);
 			});
 			
 			if (savedFormState.previewUrl) {
 				setPreviewUrl(savedFormState.previewUrl);
 			}
+			
+			// If there was a saved file, we need to handle it specially
+            if (savedFormState.profilePic instanceof File) {
+                form.setValue('profilePic', savedFormState.profilePic);
+            }
 		}
 	}, [open, form, savedFormState]);
 
@@ -176,13 +199,21 @@ const StudentTransportFormDialog = ({
 		
 		onSubmit(formattedData);
 		form.reset();
-		setPreviewUrl(null);
+		if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
+        }
 		setSavedFormState(null);
 	};
 
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, onChange: (value: any) => void) => {
 		const file = e.target.files?.[0];
 		if (!file) return;
+
+        // Clean up previous preview URL if it exists
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+        }
 
 		if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
 			form.setError("profilePic", { 
@@ -205,7 +236,10 @@ const StudentTransportFormDialog = ({
 
 	const removeProfilePic = () => {
 		form.setValue("profilePic", undefined);
-		setPreviewUrl(null);
+		if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
+        }
 	};
 
 	return (
@@ -239,6 +273,9 @@ const StudentTransportFormDialog = ({
 												<div className="relative">
 													<Avatar className="w-24 h-24">
 														<AvatarImage src={previewUrl} alt="Preview" />
+                                                        <AvatarFallback>
+                                                            {form.getValues().name?.[0] || 'ST'}
+                                                        </AvatarFallback>
 													</Avatar>
 													<button 
 														type="button"
