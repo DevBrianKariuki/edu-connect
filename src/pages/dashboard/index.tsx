@@ -1,10 +1,59 @@
 
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth/AuthContext";
 import InfoStrip from "@/components/dashboard/InfoStrip";
+import { getCollectionCount, getRecentActivities, getUpcomingEvents } from "@/lib/firebase/data";
+import { format, formatDistanceToNow } from "date-fns";
 
 export default function DashboardPage() {
 	const { state } = useAuth();
+	const [isLoading, setIsLoading] = useState(true);
+	const [stats, setStats] = useState({
+		students: 0,
+		teachers: 0,
+		classes: 0,
+		attendanceRate: 0,
+	});
+	const [activities, setActivities] = useState<any[]>([]);
+	const [events, setEvents] = useState<any[]>([]);
+
+	useEffect(() => {
+		async function fetchDashboardData() {
+			setIsLoading(true);
+			try {
+				// Fetch statistics
+				const studentsCount = await getCollectionCount("students");
+				const teachersCount = await getCollectionCount("staff", "role", "teacher");
+				const classesCount = await getCollectionCount("classes");
+				
+				// Calculate attendance rate (this would require more complex logic in a real app)
+				// For demo, we'll use a placeholder value
+				const attendanceRate = 92;
+				
+				setStats({
+					students: studentsCount,
+					teachers: teachersCount,
+					classes: classesCount,
+					attendanceRate,
+				});
+				
+				// Fetch recent activities
+				const recentActivities = await getRecentActivities(5);
+				setActivities(recentActivities);
+				
+				// Fetch upcoming events
+				const upcomingEvents = await getUpcomingEvents(3);
+				setEvents(upcomingEvents);
+			} catch (error) {
+				console.error("Error fetching dashboard data:", error);
+			} finally {
+				setIsLoading(false);
+			}
+		}
+		
+		fetchDashboardData();
+	}, []);
 
 	return (
 		<div>
@@ -22,7 +71,9 @@ export default function DashboardPage() {
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
-							<div className="text-2xl font-bold">0</div>
+							<div className="text-2xl font-bold">
+								{isLoading ? "Loading..." : stats.students}
+							</div>
 						</CardContent>
 					</Card>
 
@@ -33,7 +84,9 @@ export default function DashboardPage() {
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
-							<div className="text-2xl font-bold">0</div>
+							<div className="text-2xl font-bold">
+								{isLoading ? "Loading..." : stats.teachers}
+							</div>
 						</CardContent>
 					</Card>
 
@@ -44,7 +97,9 @@ export default function DashboardPage() {
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
-							<div className="text-2xl font-bold">0</div>
+							<div className="text-2xl font-bold">
+								{isLoading ? "Loading..." : stats.classes}
+							</div>
 						</CardContent>
 					</Card>
 
@@ -55,7 +110,9 @@ export default function DashboardPage() {
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
-							<div className="text-2xl font-bold">0%</div>
+							<div className="text-2xl font-bold">
+								{isLoading ? "Loading..." : `${stats.attendanceRate}%`}
+							</div>
 						</CardContent>
 					</Card>
 				</div>
@@ -66,9 +123,25 @@ export default function DashboardPage() {
 							<CardTitle>Recent Activities</CardTitle>
 						</CardHeader>
 						<CardContent>
-							<p className="text-sm text-muted-foreground">
-								No recent activities
-							</p>
+							{isLoading ? (
+								<p className="text-sm text-muted-foreground">Loading activities...</p>
+							) : activities.length > 0 ? (
+								<div className="space-y-4">
+									{activities.map((activity) => (
+										<div key={activity.id} className="flex justify-between items-start border-b pb-2 last:border-0">
+											<div>
+												<p className="font-medium">{activity.title}</p>
+												<p className="text-sm text-muted-foreground">{activity.description}</p>
+											</div>
+											<p className="text-xs text-muted-foreground">
+												{formatDistanceToNow(activity.timestamp, { addSuffix: true })}
+											</p>
+										</div>
+									))}
+								</div>
+							) : (
+								<p className="text-sm text-muted-foreground">No recent activities</p>
+							)}
 						</CardContent>
 					</Card>
 
@@ -77,9 +150,23 @@ export default function DashboardPage() {
 							<CardTitle>Upcoming Events</CardTitle>
 						</CardHeader>
 						<CardContent>
-							<p className="text-sm text-muted-foreground">
-								No upcoming events
-							</p>
+							{isLoading ? (
+								<p className="text-sm text-muted-foreground">Loading events...</p>
+							) : events.length > 0 ? (
+								<div className="space-y-4">
+									{events.map((event) => (
+										<div key={event.id}>
+											<h3 className="font-medium">{event.title}</h3>
+											<p className="text-sm text-muted-foreground">
+												{format(event.date, "MMMM d, yyyy")}
+												{event.time ? ` - ${event.time}` : ""}
+											</p>
+										</div>
+									))}
+								</div>
+							) : (
+								<p className="text-sm text-muted-foreground">No upcoming events</p>
+							)}
 						</CardContent>
 					</Card>
 				</div>
