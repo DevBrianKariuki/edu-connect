@@ -100,7 +100,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
-        defaultValues: savedFormState || {
+        defaultValues: {
             firstName: "",
             lastName: "",
             admissionNumber: "",
@@ -120,7 +120,12 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
     useEffect(() => {
         if (open && savedFormState) {
             Object.entries(savedFormState).forEach(([key, value]) => {
-                form.setValue(key as any, value);
+                // Special handling for Date objects
+                if (key === 'dateOfBirth' && value) {
+                    form.setValue(key as any, new Date(value as string));
+                } else {
+                    form.setValue(key as any, value);
+                }
             });
             
             // If there was a saved preview URL, restore it
@@ -194,7 +199,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                 onOpenChange(newOpen);
             }}
         >
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Add New Student</DialogTitle>
                 </DialogHeader>
@@ -300,6 +305,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                     <Select
                                         onValueChange={field.onChange}
                                         defaultValue={field.value}
+                                        value={field.value}
                                     >
                                         <FormControl>
                                             <SelectTrigger>
@@ -341,7 +347,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                                     <Button
                                                         variant={"outline"}
                                                         className={cn(
-                                                            "pl-3 text-left font-normal",
+                                                            "w-full pl-3 text-left font-normal",
                                                             !field.value && "text-muted-foreground"
                                                         )}
                                                     >
@@ -358,7 +364,11 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                                 <Calendar
                                                     mode="single"
                                                     selected={field.value}
-                                                    onSelect={(date) => date && field.onChange(date)}
+                                                    onSelect={(date) => {
+                                                        if (date) {
+                                                            field.onChange(date);
+                                                        }
+                                                    }}
                                                     disabled={(date) =>
                                                         date > new Date() || date < new Date("1900-01-01")
                                                     }
@@ -380,6 +390,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                         <Select
                                             onValueChange={field.onChange}
                                             defaultValue={field.value}
+                                            value={field.value}
                                         >
                                             <FormControl>
                                                 <SelectTrigger>
@@ -422,6 +433,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                         <Select
                                             onValueChange={field.onChange}
                                             defaultValue={field.value}
+                                            value={field.value}
                                         >
                                             <FormControl>
                                                 <SelectTrigger>

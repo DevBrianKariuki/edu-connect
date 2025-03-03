@@ -90,7 +90,7 @@ const StudentTransportFormDialog = ({
 
 	const form = useForm<StudentTransportFormData>({
 		resolver: zodResolver(studentTransportFormSchema),
-		defaultValues: savedFormState || {
+		defaultValues: {
 			name: "",
 			class: "",
 			route: "",
@@ -195,7 +195,7 @@ const StudentTransportFormDialog = ({
 			}
 			onOpenChange(newOpen);
 		}}>
-			<DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+			<DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
 				<DialogHeader>
 					<DialogTitle>Add Transport Student</DialogTitle>
 				</DialogHeader>
@@ -271,7 +271,7 @@ const StudentTransportFormDialog = ({
 									<FormLabel>Class</FormLabel>
 									<Select
 										onValueChange={field.onChange}
-										defaultValue={field.value}>
+										value={field.value}>
 										<FormControl>
 											<SelectTrigger>
 												<SelectValue placeholder="Select class" />
@@ -303,7 +303,7 @@ const StudentTransportFormDialog = ({
 									<FormLabel>Route</FormLabel>
 									<Select
 										onValueChange={field.onChange}
-										defaultValue={field.value}>
+										value={field.value}>
 										<FormControl>
 											<SelectTrigger>
 												<SelectValue placeholder="Select route" />
@@ -330,7 +330,7 @@ const StudentTransportFormDialog = ({
 									<FormLabel>Bus</FormLabel>
 									<Select
 										onValueChange={field.onChange}
-										defaultValue={field.value}>
+										value={field.value}>
 										<FormControl>
 											<SelectTrigger>
 												<SelectValue placeholder="Select bus" />
