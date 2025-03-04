@@ -27,6 +27,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "sonner";
+import { addStaffMember, updateStaffMember } from "@/lib/firebase/staff";
 
 const phoneRegex = /^\+?\d{10,15}$/;
 
@@ -48,7 +49,7 @@ interface StaffFormDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	onSubmit: (data: StaffFormData) => void;
-	initialData?: Partial<StaffFormData>;
+	initialData?: Partial<StaffFormData> & { id?: string };
 }
 
 export function StaffFormDialog({
@@ -76,12 +77,22 @@ export function StaffFormDialog({
 	const handleSubmit = async (data: StaffFormData) => {
 		try {
 			setIsSubmitting(true);
+			
+			if (initialData?.id) {
+				// Update existing staff member
+				await updateStaffMember(initialData.id, data);
+				toast.success("Staff details updated successfully");
+			} else {
+				// Add new staff member
+				await addStaffMember(data);
+				toast.success("New staff member added successfully");
+			}
+			
 			onSubmit(data);
 			form.reset();
-			toast.success("Staff details submitted successfully");
 		} catch (error) {
-			toast.error("Failed to submit staff details");
 			console.error("Error submitting staff form:", error);
+			toast.error("Failed to submit staff details");
 		} finally {
 			setIsSubmitting(false);
 		}

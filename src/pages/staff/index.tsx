@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import {
 	Table,
@@ -10,60 +10,39 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, Filter } from "lucide-react";
+import { Search, Plus, Filter, Loader2, Trash2 } from "lucide-react";
 import {
 	StaffFormDialog,
 	StaffFormData,
 } from "@/components/staff/StaffFormDialog";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-interface StaffMember {
-	id: string;
-	name: string;
-	role: string;
-	department: string;
-	email: string;
-	phone: string;
-	joinDate: string;
-	status: "active" | "inactive";
-	imageUrl: string;
-}
-
-const mockStaffMembers: StaffMember[] = [
-	{
-		id: "1",
-		name: "John Doe",
-		role: "Teacher",
-		department: "Mathematics",
-		email: "john.doe@edukenya.com",
-		phone: "+254 712 345 678",
-		joinDate: "2023-01-15",
-		status: "active",
-		imageUrl:
-			"https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
-	},
-	{
-		id: "2",
-		name: "Jane Smith",
-		role: "Administrator",
-		department: "Administration",
-		email: "jane.smith@edukenya.com",
-		phone: "+254 723 456 789",
-		joinDate: "2023-02-01",
-		status: "active",
-		imageUrl:
-			"https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
-	},
-];
+import { 
+	getAllStaffMembers, 
+	StaffMember, 
+	getStaffCountByDepartment,
+	deleteStaffMember 
+} from "@/lib/firebase/staff";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const StaffPage = () => {
-	const [staffMembers, setStaffMembers] = useState<StaffMember[]>(mockStaffMembers);
+	const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [selectedDepartment, setSelectedDepartment] = useState("");
 	const [showAddStaffDialog, setShowAddStaffDialog] = useState(false);
 	const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
-	const { toast } = useToast();
+	const [isLoading, setIsLoading] = useState(true);
+	const [departmentCounts, setDepartmentCounts] = useState<Record<string, number>>({});
+	const [staffToDelete, setStaffToDelete] = useState<StaffMember | null>(null);
 
 	const departments = [
 		"Mathematics",
@@ -72,6 +51,29 @@ const StaffPage = () => {
 		"Social Studies",
 		"Administration",
 	];
+
+	// Fetch staff data from Firebase
+	const fetchStaffData = async () => {
+		try {
+			setIsLoading(true);
+			const staff = await getAllStaffMembers();
+			setStaffMembers(staff);
+			
+			// Get department counts
+			const counts = await getStaffCountByDepartment();
+			setDepartmentCounts(counts);
+		} catch (error) {
+			console.error("Error fetching staff data:", error);
+			toast.error("Failed to load staff data");
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	// Load staff data on component mount
+	useEffect(() => {
+		fetchStaffData();
+	}, []);
 
 	const filteredStaff = staffMembers.filter((staff) => {
 		const matchesSearch =
@@ -89,49 +91,29 @@ const StaffPage = () => {
 			: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
 	};
 
-	const handleAddStaff = (data: StaffFormData) => {
-		const newStaffMember: StaffMember = {
-			id: `${staffMembers.length + 1}`,
-			name: data.name,
-			role: data.role,
-			department: data.department,
-			email: data.email,
-			phone: data.phone,
-			joinDate: data.joinDate,
-			status: data.status,
-			imageUrl: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
-		};
-		
-		setStaffMembers([...staffMembers, newStaffMember]);
-		toast({
-			title: "Success",
-			description: "Staff member has been added successfully.",
-		});
+	const handleAddStaff = async (data: StaffFormData) => {
+		await fetchStaffData(); // Refresh the staff list
 		setShowAddStaffDialog(false);
 	};
 
-	const handleEditStaff = (data: StaffFormData) => {
-		if (!editingStaff) return;
-		
-		const updatedStaffMembers = staffMembers.map((staff) => 
-			staff.id === editingStaff.id ? {
-				...staff,
-				name: data.name,
-				role: data.role,
-				department: data.department,
-				email: data.email,
-				phone: data.phone,
-				joinDate: data.joinDate,
-				status: data.status,
-			} : staff
-		);
-		
-		setStaffMembers(updatedStaffMembers);
-		toast({
-			title: "Success",
-			description: "Staff member has been updated successfully.",
-		});
+	const handleEditStaff = async (data: StaffFormData) => {
+		await fetchStaffData(); // Refresh the staff list
 		setEditingStaff(null);
+	};
+
+	const handleDeleteStaff = async () => {
+		if (!staffToDelete) return;
+		
+		try {
+			await deleteStaffMember(staffToDelete.id);
+			toast.success("Staff member deleted successfully");
+			fetchStaffData(); // Refresh the staff list
+		} catch (error) {
+			console.error("Error deleting staff member:", error);
+			toast.error("Failed to delete staff member");
+		} finally {
+			setStaffToDelete(null);
+		}
 	};
 
 	return (
@@ -153,7 +135,11 @@ const StaffPage = () => {
 					</CardHeader>
 					<CardContent>
 						<p className="text-3xl font-bold">
-							{staffMembers.length}
+							{isLoading ? (
+								<Loader2 className="h-6 w-6 animate-spin" />
+							) : (
+								staffMembers.length
+							)}
 						</p>
 						<p className="text-sm text-muted-foreground">Active Members</p>
 					</CardContent>
@@ -163,7 +149,7 @@ const StaffPage = () => {
 						<CardTitle className="text-lg">Departments</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<p className="text-3xl font-bold">{departments.length}</p>
+						<p className="text-3xl font-bold">{Object.keys(departmentCounts).length}</p>
 						<p className="text-sm text-muted-foreground">
 							Academic & Administrative
 						</p>
@@ -174,7 +160,18 @@ const StaffPage = () => {
 						<CardTitle className="text-lg">New Hires</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<p className="text-3xl font-bold">2</p>
+						<p className="text-3xl font-bold">
+							{isLoading ? (
+								<Loader2 className="h-6 w-6 animate-spin" />
+							) : (
+								staffMembers.filter(staff => {
+									const hireDate = new Date(staff.joinDate);
+									const oneMonthAgo = new Date();
+									oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+									return hireDate >= oneMonthAgo;
+								}).length
+							)}
+						</p>
 						<p className="text-sm text-muted-foreground">This Month</p>
 					</CardContent>
 				</Card>
@@ -214,53 +211,91 @@ const StaffPage = () => {
 
 			<Card>
 				<CardContent className="p-0">
-					<Table>
-						<TableHeader>
-							<TableRow>
-								<TableHead>Name</TableHead>
-								<TableHead>Role</TableHead>
-								<TableHead>Department</TableHead>
-								<TableHead>Email</TableHead>
-								<TableHead>Phone</TableHead>
-								<TableHead>Join Date</TableHead>
-								<TableHead>Status</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{filteredStaff.length === 0 ? (
+					{isLoading ? (
+						<div className="flex justify-center items-center py-12">
+							<Loader2 className="h-8 w-8 animate-spin text-primary" />
+							<span className="ml-2 text-lg">Loading staff data...</span>
+						</div>
+					) : (
+						<Table>
+							<TableHeader>
 								<TableRow>
-									<TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-										No staff members found
-									</TableCell>
+									<TableHead>Name</TableHead>
+									<TableHead>Role</TableHead>
+									<TableHead>Department</TableHead>
+									<TableHead>Email</TableHead>
+									<TableHead>Phone</TableHead>
+									<TableHead>Join Date</TableHead>
+									<TableHead>Status</TableHead>
+									<TableHead className="text-right">Actions</TableHead>
 								</TableRow>
-							) : (
-								filteredStaff.map((staff) => (
-									<TableRow
-										key={staff.id}
-										className="cursor-pointer hover:bg-muted/50"
-										onClick={() => setEditingStaff(staff)}>
-										<TableCell className="font-medium">
-											{staff.name}
-										</TableCell>
-										<TableCell>{staff.role}</TableCell>
-										<TableCell>{staff.department}</TableCell>
-										<TableCell>{staff.email}</TableCell>
-										<TableCell>{staff.phone}</TableCell>
-										<TableCell>{staff.joinDate}</TableCell>
-										<TableCell>
-											<span
-												className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-													staff.status
-												)}`}>
-												{staff.status.charAt(0).toUpperCase() +
-													staff.status.slice(1)}
-											</span>
+							</TableHeader>
+							<TableBody>
+								{filteredStaff.length === 0 ? (
+									<TableRow>
+										<TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+											{searchTerm || selectedDepartment ? "No staff members match your search" : "No staff members found. Add your first staff member!"}
 										</TableCell>
 									</TableRow>
-								))
-							)}
-						</TableBody>
-					</Table>
+								) : (
+									filteredStaff.map((staff) => (
+										<TableRow
+											key={staff.id}
+											className="hover:bg-muted/50">
+											<TableCell className="font-medium">
+												{staff.name}
+											</TableCell>
+											<TableCell>{staff.role}</TableCell>
+											<TableCell>{staff.department}</TableCell>
+											<TableCell>{staff.email}</TableCell>
+											<TableCell>{staff.phone}</TableCell>
+											<TableCell>{staff.joinDate}</TableCell>
+											<TableCell>
+												<span
+													className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+														staff.status
+													)}`}>
+													{staff.status.charAt(0).toUpperCase() +
+														staff.status.slice(1)}
+												</span>
+											</TableCell>
+											<TableCell className="text-right">
+												<div className="flex justify-end space-x-2">
+													<Button 
+														variant="ghost" 
+														size="sm" 
+														className="h-8 w-8 p-0"
+														onClick={() => setEditingStaff(staff)}>
+														<svg
+															width="15"
+															height="15"
+															viewBox="0 0 15 15"
+															fill="none"
+															xmlns="http://www.w3.org/2000/svg"
+															className="h-4 w-4">
+															<path
+																d="M11.8536 1.14645C11.6583 0.951184 11.3417 0.951184 11.1465 1.14645L3.71455 8.57836C3.62459 8.66832 3.55263 8.77461 3.50251 8.89155L2.04044 12.303C1.9599 12.491 2.00189 12.709 2.14646 12.8536C2.29103 12.9981 2.50905 13.0401 2.69697 12.9596L6.10847 11.4975C6.2254 11.4474 6.3317 11.3754 6.42166 11.2855L13.8536 3.85355C14.0488 3.65829 14.0488 3.34171 13.8536 3.14645L11.8536 1.14645ZM4.42166 9.28547L11.5 2.20711L12.7929 3.5L5.71455 10.5784L4.21924 11.2192L3.78081 10.7808L4.42166 9.28547Z"
+																fill="currentColor"
+																fillRule="evenodd"
+																clipRule="evenodd">
+															</path>
+														</svg>
+													</Button>
+													<Button
+														variant="ghost"
+														size="sm"
+														className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50/50"
+														onClick={() => setStaffToDelete(staff)}>
+														<Trash2 className="h-4 w-4" />
+													</Button>
+												</div>
+											</TableCell>
+										</TableRow>
+									))
+								)}
+							</TableBody>
+						</Table>
+					)}
 				</CardContent>
 			</Card>
 
@@ -278,6 +313,23 @@ const StaffPage = () => {
 					initialData={editingStaff}
 				/>
 			)}
+
+			<AlertDialog open={!!staffToDelete} onOpenChange={(open) => !open && setStaffToDelete(null)}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Are you sure?</AlertDialogTitle>
+						<AlertDialogDescription>
+							This will permanently delete the staff member <span className="font-semibold">{staffToDelete?.name}</span>. This action cannot be undone.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction onClick={handleDeleteStaff} className="bg-red-500 hover:bg-red-600">
+							Delete
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 };
