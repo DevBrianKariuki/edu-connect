@@ -1,5 +1,7 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth/AuthContext";
 import InfoStrip from "@/components/dashboard/InfoStrip";
 import { getCollectionCount, getRecentActivities, getUpcomingEvents } from "@/lib/firebase/data";
