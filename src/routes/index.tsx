@@ -39,6 +39,7 @@ import ParentSettingsPage from "@/pages/parent-portal/settings";
 import TransportTrackingPage from "@/pages/parent-portal/transport";
 import TimetablePage from "@/pages/parent-portal/timetable";
 import TimetablePageAdmin from "@/pages/timetable";
+import ClassDetailsPage from "@/pages/classes/[id]";
 import { 
     Home,
     Users,
@@ -218,6 +219,10 @@ const router = createBrowserRouter([
                                         element: <StudentDetails />,
                                     },
                                 ],
+                            },
+                            {
+                                path: "classes/:id",
+                                element: <ClassDetailsPage />,
                             },
                             {
                                 path: "staff",

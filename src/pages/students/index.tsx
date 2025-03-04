@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     Select,
     SelectContent,
@@ -34,7 +34,7 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit, Trash } from "lucide-react";
+import { Plus, Search, Edit, Trash, Eye } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import StudentFormDialog from "@/components/students/StudentFormDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -42,6 +42,7 @@ import { db, storage } from "@/lib/firebase/config";
 import { collection, addDoc, getDocs, query, where, deleteDoc, doc, Timestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
 
 interface ClassData {
     id: string;
@@ -83,6 +84,7 @@ export default function StudentsPage() {
     const [selectedClass, setSelectedClass] = useState("all");
     const { toast } = useToast();
     const { state } = useAuth();
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchClasses();
@@ -158,7 +160,6 @@ export default function StudentsPage() {
                 return;
             }
 
-            // Add class to Firestore
             const classData = {
                 name: newClassName,
                 capacity: parseInt(newClassCapacity),
@@ -170,7 +171,6 @@ export default function StudentsPage() {
             
             await addDoc(collection(db, "classes"), classData);
             
-            // Refresh classes
             fetchClasses();
             
             toast({
@@ -178,7 +178,6 @@ export default function StudentsPage() {
                 description: `${newClassName} has been successfully added.`,
             });
             
-            // Reset form and close dialog
             setShowAddClassDialog(false);
             setNewClassName("");
             setNewClassCapacity("");
@@ -195,7 +194,6 @@ export default function StudentsPage() {
 
     const handleAddStudent = async (data: any) => {
         try {
-            // Check if a class has been selected
             if (!data.class || data.class === "none") {
                 toast({
                     title: "Error",
@@ -207,17 +205,14 @@ export default function StudentsPage() {
             
             let profilePhotoUrl = "";
             
-            // Upload profile photo if provided
             if (data.profilePhoto) {
                 const storageRef = ref(storage, `student-photos/${Date.now()}-${data.profilePhoto.name}`);
                 await uploadBytes(storageRef, data.profilePhoto);
                 profilePhotoUrl = await getDownloadURL(storageRef);
             }
             
-            // Get class name for better display
             const selectedClass = classes.find(c => c.id === data.class);
             
-            // Add student data to Firestore
             const studentData = {
                 firstName: data.firstName,
                 lastName: data.lastName,
@@ -233,18 +228,12 @@ export default function StudentsPage() {
                 address: data.address,
                 profilePhotoUrl,
                 createdAt: Timestamp.now(),
-                schoolId: state.user?.id || "unknown" // Link student to school
+                schoolId: state.user?.id || "unknown"
             };
             
             await addDoc(collection(db, "students"), studentData);
             
-            // Update class student count
-            const classDoc = doc(db, "classes", data.class);
-            // In a real app, you would use a transaction to increment the student count
-            // For now, we'll just refresh the classes to get updated data
             fetchClasses();
-            
-            // Refresh the student list
             fetchStudents();
             
             return true;
@@ -256,10 +245,8 @@ export default function StudentsPage() {
 
     const handleDeleteStudent = async (studentId: string) => {
         try {
-            // Delete student document
             await deleteDoc(doc(db, "students", studentId));
             
-            // Refresh the student list
             fetchStudents();
             
             toast({
@@ -276,7 +263,6 @@ export default function StudentsPage() {
         }
     };
 
-    // Filter students based on search query and selected class
     const filteredStudents = students.filter(student => {
         const matchesSearch = searchQuery
             ? `${student.firstName} ${student.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -290,7 +276,6 @@ export default function StudentsPage() {
         return matchesSearch && matchesClass;
     });
 
-    // Update student fields with class name for better display
     const studentsWithClassNames = filteredStudents.map(student => {
         const classInfo = classes.find(c => c.id === student.class);
         return {
@@ -379,28 +364,38 @@ export default function StudentsPage() {
                                 No classes found. Add your first class to get started.
                             </div>
                         ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Class Name</TableHead>
-                                        <TableHead>Capacity</TableHead>
-                                        <TableHead>Teacher</TableHead>
-                                        <TableHead>Students</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {classes.map((classData) => (
-                                        <TableRow key={classData.id}>
-                                            <TableCell className="font-medium">
-                                                {classData.name}
-                                            </TableCell>
-                                            <TableCell>{classData.capacity}</TableCell>
-                                            <TableCell>{classData.teacher}</TableCell>
-                                            <TableCell>{classData.students}</TableCell>
+                            <ScrollArea className="h-[240px]">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Class Name</TableHead>
+                                            <TableHead>Capacity</TableHead>
+                                            <TableHead>Teacher</TableHead>
+                                            <TableHead>Students</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {classes.map((classData) => (
+                                            <TableRow key={classData.id}>
+                                                <TableCell className="font-medium">
+                                                    {classData.name}
+                                                </TableCell>
+                                                <TableCell>{classData.capacity}</TableCell>
+                                                <TableCell>{classData.teacher}</TableCell>
+                                                <TableCell>{classData.students}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <Link to={`/classes/${classData.id}`}>
+                                                        <Button variant="ghost" size="icon">
+                                                            <Eye className="h-4 w-4" />
+                                                        </Button>
+                                                    </Link>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </ScrollArea>
                         )}
                     </CardContent>
                 </Card>
