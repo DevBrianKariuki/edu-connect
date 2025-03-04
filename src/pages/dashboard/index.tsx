@@ -1,10 +1,14 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth/AuthContext";
 import InfoStrip from "@/components/dashboard/InfoStrip";
 import { getCollectionCount, getRecentActivities, getUpcomingEvents } from "@/lib/firebase/data";
 import { format, formatDistanceToNow } from "date-fns";
+import { 
+  StatCardSkeleton, 
+  ActivitiesSkeleton, 
+  EventsSkeleton 
+} from "@/components/dashboard/DashboardSkeletons";
 
 export default function DashboardPage() {
 	const { state } = useAuth();
@@ -72,7 +76,7 @@ export default function DashboardPage() {
 						</CardHeader>
 						<CardContent>
 							<div className="text-2xl font-bold">
-								{isLoading ? "Loading..." : stats.students}
+								{isLoading ? <Skeleton className="h-8 w-16" /> : stats.students}
 							</div>
 						</CardContent>
 					</Card>
@@ -85,7 +89,7 @@ export default function DashboardPage() {
 						</CardHeader>
 						<CardContent>
 							<div className="text-2xl font-bold">
-								{isLoading ? "Loading..." : stats.teachers}
+								{isLoading ? <Skeleton className="h-8 w-16" /> : stats.teachers}
 							</div>
 						</CardContent>
 					</Card>
@@ -98,7 +102,7 @@ export default function DashboardPage() {
 						</CardHeader>
 						<CardContent>
 							<div className="text-2xl font-bold">
-								{isLoading ? "Loading..." : stats.classes}
+								{isLoading ? <Skeleton className="h-8 w-16" /> : stats.classes}
 							</div>
 						</CardContent>
 					</Card>
@@ -111,7 +115,7 @@ export default function DashboardPage() {
 						</CardHeader>
 						<CardContent>
 							<div className="text-2xl font-bold">
-								{isLoading ? "Loading..." : `${stats.attendanceRate}%`}
+								{isLoading ? <Skeleton className="h-8 w-16" /> : `${stats.attendanceRate}%`}
 							</div>
 						</CardContent>
 					</Card>
@@ -124,7 +128,7 @@ export default function DashboardPage() {
 						</CardHeader>
 						<CardContent>
 							{isLoading ? (
-								<p className="text-sm text-muted-foreground">Loading activities...</p>
+								<ActivitiesSkeleton />
 							) : activities.length > 0 ? (
 								<div className="space-y-4">
 									{activities.map((activity) => (
@@ -151,7 +155,7 @@ export default function DashboardPage() {
 						</CardHeader>
 						<CardContent>
 							{isLoading ? (
-								<p className="text-sm text-muted-foreground">Loading events...</p>
+								<EventsSkeleton />
 							) : events.length > 0 ? (
 								<div className="space-y-4">
 									{events.map((event) => (

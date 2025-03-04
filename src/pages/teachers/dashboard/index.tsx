@@ -5,6 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, BookOpen, Calendar, Clock } from "lucide-react";
 import { getCollectionCount, getTeacherSchedule } from "@/lib/firebase/data";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  TeacherStatCardSkeleton,
+  ScheduleSkeleton
+} from "@/components/dashboard/TeacherDashboardSkeletons";
 
 export default function TeacherDashboardPage() {
     const { state } = useAuth();
@@ -127,7 +132,7 @@ export default function TeacherDashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            {isLoading ? "..." : stats.classes}
+                            {isLoading ? <Skeleton className="h-8 w-16" /> : stats.classes}
                         </div>
                         <p className="text-xs text-muted-foreground">
                             Active classes this term
@@ -144,7 +149,7 @@ export default function TeacherDashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            {isLoading ? "..." : stats.students}
+                            {isLoading ? <Skeleton className="h-8 w-16" /> : stats.students}
                         </div>
                         <p className="text-xs text-muted-foreground">
                             Across all classes
@@ -161,7 +166,7 @@ export default function TeacherDashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            {isLoading ? "..." : stats.todayClasses}
+                            {isLoading ? <Skeleton className="h-8 w-16" /> : stats.todayClasses}
                         </div>
                         <p className="text-xs text-muted-foreground">
                             Scheduled for today
@@ -178,10 +183,10 @@ export default function TeacherDashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            {isLoading ? "..." : nextClass?.time}
+                            {isLoading ? <Skeleton className="h-8 w-16" /> : nextClass?.time}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                            {isLoading ? "..." : `${nextClass?.class} - ${nextClass?.subject}`}
+                            {isLoading ? <Skeleton className="h-4 w-32" /> : `${nextClass?.class} - ${nextClass?.subject}`}
                         </p>
                     </CardContent>
                 </Card>
@@ -193,7 +198,7 @@ export default function TeacherDashboardPage() {
                 </CardHeader>
                 <CardContent>
                     {isLoading ? (
-                        <p className="text-sm text-muted-foreground">Loading schedule...</p>
+                        <ScheduleSkeleton />
                     ) : schedule.length > 0 ? (
                         <div className="space-y-4">
                             {schedule.map((session, index) => (
