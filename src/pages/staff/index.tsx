@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,6 +16,7 @@ import {
 	StaffFormData,
 } from "@/components/staff/StaffFormDialog";
 import { useToast } from "@/components/ui/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface StaffMember {
 	id: string;
@@ -25,7 +27,7 @@ interface StaffMember {
 	phone: string;
 	joinDate: string;
 	status: "active" | "inactive";
-	imageUrl: string; // Added this line to resolve the TypeScript error
+	imageUrl: string;
 }
 
 const mockStaffMembers: StaffMember[] = [
@@ -39,7 +41,7 @@ const mockStaffMembers: StaffMember[] = [
 		joinDate: "2023-01-15",
 		status: "active",
 		imageUrl:
-			"https://images.unsplash.com/photo-1649972904349-6e44c42644a7", // Added a placeholder image URL
+			"https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
 	},
 	{
 		id: "2",
@@ -51,11 +53,12 @@ const mockStaffMembers: StaffMember[] = [
 		joinDate: "2023-02-01",
 		status: "active",
 		imageUrl:
-			"https://images.unsplash.com/photo-1649972904349-6e44c42644a7", // Added a placeholder image URL
+			"https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
 	},
 ];
 
 const StaffPage = () => {
+	const [staffMembers, setStaffMembers] = useState<StaffMember[]>(mockStaffMembers);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [selectedDepartment, setSelectedDepartment] = useState("");
 	const [showAddStaffDialog, setShowAddStaffDialog] = useState(false);
@@ -70,7 +73,7 @@ const StaffPage = () => {
 		"Administration",
 	];
 
-	const filteredStaff = mockStaffMembers.filter((staff) => {
+	const filteredStaff = staffMembers.filter((staff) => {
 		const matchesSearch =
 			staff.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			staff.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -82,12 +85,24 @@ const StaffPage = () => {
 
 	const getStatusColor = (status: string) => {
 		return status === "active"
-			? "bg-green-100 text-green-800"
-			: "bg-red-100 text-red-800";
+			? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+			: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
 	};
 
 	const handleAddStaff = (data: StaffFormData) => {
-		console.log("Adding staff member:", data);
+		const newStaffMember: StaffMember = {
+			id: `${staffMembers.length + 1}`,
+			name: data.name,
+			role: data.role,
+			department: data.department,
+			email: data.email,
+			phone: data.phone,
+			joinDate: data.joinDate,
+			status: data.status,
+			imageUrl: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
+		};
+		
+		setStaffMembers([...staffMembers, newStaffMember]);
 		toast({
 			title: "Success",
 			description: "Staff member has been added successfully.",
@@ -96,7 +111,22 @@ const StaffPage = () => {
 	};
 
 	const handleEditStaff = (data: StaffFormData) => {
-		console.log("Editing staff member:", data);
+		if (!editingStaff) return;
+		
+		const updatedStaffMembers = staffMembers.map((staff) => 
+			staff.id === editingStaff.id ? {
+				...staff,
+				name: data.name,
+				role: data.role,
+				department: data.department,
+				email: data.email,
+				phone: data.phone,
+				joinDate: data.joinDate,
+				status: data.status,
+			} : staff
+		);
+		
+		setStaffMembers(updatedStaffMembers);
 		toast({
 			title: "Success",
 			description: "Staff member has been updated successfully.",
@@ -117,31 +147,43 @@ const StaffPage = () => {
 			</div>
 
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-				<div className="bg-white p-6 rounded-lg shadow">
-					<h3 className="text-lg font-semibold mb-2">Total Staff</h3>
-					<p className="text-3xl font-bold">
-						{mockStaffMembers.length}
-					</p>
-					<p className="text-sm text-gray-500">Active Members</p>
-				</div>
-				<div className="bg-white p-6 rounded-lg shadow">
-					<h3 className="text-lg font-semibold mb-2">Departments</h3>
-					<p className="text-3xl font-bold">{departments.length}</p>
-					<p className="text-sm text-gray-500">
-						Academic & Administrative
-					</p>
-				</div>
-				<div className="bg-white p-6 rounded-lg shadow">
-					<h3 className="text-lg font-semibold mb-2">New Hires</h3>
-					<p className="text-3xl font-bold">2</p>
-					<p className="text-sm text-gray-500">This Month</p>
-				</div>
+				<Card>
+					<CardHeader>
+						<CardTitle className="text-lg">Total Staff</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<p className="text-3xl font-bold">
+							{staffMembers.length}
+						</p>
+						<p className="text-sm text-muted-foreground">Active Members</p>
+					</CardContent>
+				</Card>
+				<Card>
+					<CardHeader>
+						<CardTitle className="text-lg">Departments</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<p className="text-3xl font-bold">{departments.length}</p>
+						<p className="text-sm text-muted-foreground">
+							Academic & Administrative
+						</p>
+					</CardContent>
+				</Card>
+				<Card>
+					<CardHeader>
+						<CardTitle className="text-lg">New Hires</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<p className="text-3xl font-bold">2</p>
+						<p className="text-sm text-muted-foreground">This Month</p>
+					</CardContent>
+				</Card>
 			</div>
 
 			<div className="flex gap-4 items-center">
 				<div className="relative flex-1">
 					<Search
-						className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+						className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
 						size={20}
 					/>
 					<Input
@@ -155,7 +197,7 @@ const StaffPage = () => {
 					<select
 						value={selectedDepartment}
 						onChange={(e) => setSelectedDepartment(e.target.value)}
-						className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
+						className="h-10 rounded-md border border-input bg-background dark:bg-secondary px-3 py-2 text-sm ring-offset-background">
 						<option value="">All Departments</option>
 						{departments.map((dept) => (
 							<option key={dept} value={dept}>
@@ -164,53 +206,63 @@ const StaffPage = () => {
 						))}
 					</select>
 					<Filter
-						className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+						className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none"
 						size={20}
 					/>
 				</div>
 			</div>
 
-			<div className="bg-white rounded-lg shadow overflow-hidden">
-				<Table>
-					<TableHeader>
-						<TableRow>
-							<TableHead>Name</TableHead>
-							<TableHead>Role</TableHead>
-							<TableHead>Department</TableHead>
-							<TableHead>Email</TableHead>
-							<TableHead>Phone</TableHead>
-							<TableHead>Join Date</TableHead>
-							<TableHead>Status</TableHead>
-						</TableRow>
-					</TableHeader>
-					<TableBody>
-						{filteredStaff.map((staff) => (
-							<TableRow
-								key={staff.id}
-								className="cursor-pointer hover:bg-gray-50"
-								onClick={() => setEditingStaff(staff)}>
-								<TableCell className="font-medium">
-									{staff.name}
-								</TableCell>
-								<TableCell>{staff.role}</TableCell>
-								<TableCell>{staff.department}</TableCell>
-								<TableCell>{staff.email}</TableCell>
-								<TableCell>{staff.phone}</TableCell>
-								<TableCell>{staff.joinDate}</TableCell>
-								<TableCell>
-									<span
-										className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-											staff.status
-										)}`}>
-										{staff.status.charAt(0).toUpperCase() +
-											staff.status.slice(1)}
-									</span>
-								</TableCell>
+			<Card>
+				<CardContent className="p-0">
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>Name</TableHead>
+								<TableHead>Role</TableHead>
+								<TableHead>Department</TableHead>
+								<TableHead>Email</TableHead>
+								<TableHead>Phone</TableHead>
+								<TableHead>Join Date</TableHead>
+								<TableHead>Status</TableHead>
 							</TableRow>
-						))}
-					</TableBody>
-				</Table>
-			</div>
+						</TableHeader>
+						<TableBody>
+							{filteredStaff.length === 0 ? (
+								<TableRow>
+									<TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+										No staff members found
+									</TableCell>
+								</TableRow>
+							) : (
+								filteredStaff.map((staff) => (
+									<TableRow
+										key={staff.id}
+										className="cursor-pointer hover:bg-muted/50"
+										onClick={() => setEditingStaff(staff)}>
+										<TableCell className="font-medium">
+											{staff.name}
+										</TableCell>
+										<TableCell>{staff.role}</TableCell>
+										<TableCell>{staff.department}</TableCell>
+										<TableCell>{staff.email}</TableCell>
+										<TableCell>{staff.phone}</TableCell>
+										<TableCell>{staff.joinDate}</TableCell>
+										<TableCell>
+											<span
+												className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+													staff.status
+												)}`}>
+												{staff.status.charAt(0).toUpperCase() +
+													staff.status.slice(1)}
+											</span>
+										</TableCell>
+									</TableRow>
+								))
+							)}
+						</TableBody>
+					</Table>
+				</CardContent>
+			</Card>
 
 			<StaffFormDialog
 				open={showAddStaffDialog}

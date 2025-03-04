@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState } from "react";
 import {
 	Dialog,
 	DialogContent,
@@ -7,7 +8,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
 	Select,
 	SelectContent,
@@ -26,11 +26,16 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { toast } from "sonner";
+
+const phoneRegex = /^\+?\d{10,15}$/;
 
 const staffFormSchema = z.object({
 	name: z.string().min(2, "Name must be at least 2 characters"),
 	email: z.string().email("Invalid email address"),
-	phone: z.string().min(10, "Phone number must be at least 10 digits"),
+	phone: z.string().refine((val) => phoneRegex.test(val), {
+		message: "Invalid phone number format. Use +1234567890 or 1234567890",
+	}),
 	department: z.string().min(1, "Please select a department"),
 	role: z.string().min(1, "Please select a role"),
 	joinDate: z.string().min(1, "Join date is required"),
@@ -52,6 +57,8 @@ export function StaffFormDialog({
 	onSubmit,
 	initialData,
 }: StaffFormDialogProps) {
+	const [isSubmitting, setIsSubmitting] = useState(false);
+
 	const form = useForm<StaffFormData>({
 		resolver: zodResolver(staffFormSchema),
 		defaultValues: {
@@ -66,14 +73,23 @@ export function StaffFormDialog({
 		},
 	});
 
-	const handleSubmit = (data: StaffFormData) => {
-		onSubmit(data);
-		form.reset();
+	const handleSubmit = async (data: StaffFormData) => {
+		try {
+			setIsSubmitting(true);
+			onSubmit(data);
+			form.reset();
+			toast.success("Staff details submitted successfully");
+		} catch (error) {
+			toast.error("Failed to submit staff details");
+			console.error("Error submitting staff form:", error);
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-[525px]">
+			<DialogContent className="sm:max-w-[525px] dark:bg-background dark:border-border">
 				<DialogHeader>
 					<DialogTitle className="text-2xl font-bold">
 						{initialData
@@ -91,7 +107,7 @@ export function StaffFormDialog({
 								name="name"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Full Name</FormLabel>
+										<FormLabel>Full Name*</FormLabel>
 										<FormControl>
 											<Input
 												placeholder="John Doe"
@@ -107,7 +123,7 @@ export function StaffFormDialog({
 								name="email"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Email</FormLabel>
+										<FormLabel>Email*</FormLabel>
 										<FormControl>
 											<Input
 												placeholder="john@example.com"
@@ -126,7 +142,7 @@ export function StaffFormDialog({
 								name="phone"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Phone Number</FormLabel>
+										<FormLabel>Phone Number*</FormLabel>
 										<FormControl>
 											<Input
 												placeholder="+254 XXX XXX XXX"
@@ -142,7 +158,7 @@ export function StaffFormDialog({
 								name="department"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Department</FormLabel>
+										<FormLabel>Department*</FormLabel>
 										<Select
 											onValueChange={field.onChange}
 											defaultValue={field.value}>
@@ -151,7 +167,7 @@ export function StaffFormDialog({
 													<SelectValue placeholder="Select department" />
 												</SelectTrigger>
 											</FormControl>
-											<SelectContent>
+											<SelectContent className="dark:bg-secondary">
 												<SelectItem value="Mathematics">
 													Mathematics
 												</SelectItem>
@@ -181,7 +197,7 @@ export function StaffFormDialog({
 								name="role"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Role</FormLabel>
+										<FormLabel>Role*</FormLabel>
 										<Select
 											onValueChange={field.onChange}
 											defaultValue={field.value}>
@@ -190,7 +206,7 @@ export function StaffFormDialog({
 													<SelectValue placeholder="Select role" />
 												</SelectTrigger>
 											</FormControl>
-											<SelectContent>
+											<SelectContent className="dark:bg-secondary">
 												<SelectItem value="Teacher">
 													Teacher
 												</SelectItem>
@@ -214,7 +230,7 @@ export function StaffFormDialog({
 								name="joinDate"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Join Date</FormLabel>
+										<FormLabel>Join Date*</FormLabel>
 										<FormControl>
 											<Input type="date" {...field} />
 										</FormControl>
@@ -229,7 +245,7 @@ export function StaffFormDialog({
 							name="status"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Status</FormLabel>
+									<FormLabel>Status*</FormLabel>
 									<Select
 										onValueChange={field.onChange}
 										defaultValue={field.value}>
@@ -238,7 +254,7 @@ export function StaffFormDialog({
 												<SelectValue placeholder="Select status" />
 											</SelectTrigger>
 										</FormControl>
-										<SelectContent>
+										<SelectContent className="dark:bg-secondary">
 											<SelectItem value="active">
 												Active
 											</SelectItem>
@@ -256,11 +272,18 @@ export function StaffFormDialog({
 							<Button
 								type="button"
 								variant="outline"
-								onClick={() => onOpenChange(false)}>
+								onClick={() => onOpenChange(false)}
+								disabled={isSubmitting}>
 								Cancel
 							</Button>
-							<Button type="submit">
-								{initialData ? "Update Staff" : "Add Staff"}
+							<Button type="submit" disabled={isSubmitting}>
+								{isSubmitting ? (
+									<>Submitting...</>
+								) : initialData ? (
+									"Update Staff"
+								) : (
+									"Add Staff"
+								)}
 							</Button>
 						</div>
 					</form>
