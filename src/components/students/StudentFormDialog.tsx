@@ -46,6 +46,7 @@ interface StudentFormDialogProps {
     onOpenChange: (open: boolean) => void;
     onSubmit: (data: any) => Promise<boolean>;
     classes: ClassData[];
+    defaultClassId?: string;
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -112,6 +113,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
     onOpenChange,
     onSubmit,
     classes,
+    defaultClassId,
 }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formSubmitError, setFormSubmitError] = useState<string | null>(null);
@@ -125,7 +127,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
             firstName: "",
             lastName: "",
             admissionNumber: "",
-            class: "",
+            class: defaultClassId || "",
             dateOfBirth: undefined,
             gender: "",
             guardianName: "",
@@ -136,6 +138,12 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
             profilePhoto: undefined,
         },
     });
+
+    useEffect(() => {
+        if (defaultClassId) {
+            form.setValue("class", defaultClassId);
+        }
+    }, [defaultClassId, form]);
 
     useEffect(() => {
         if (open && savedFormState) {
