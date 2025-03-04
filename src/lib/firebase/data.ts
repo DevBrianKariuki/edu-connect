@@ -1,14 +1,16 @@
 
-import { collection, getDocs, query, where, count, getCountFromServer } from "firebase/firestore";
+import { collection, getDocs, query, where, getCountFromServer, DocumentData, Query, CollectionReference } from "firebase/firestore";
 import { db } from "./config";
 
 // Function to get total count of documents in a collection
 export async function getCollectionCount(collectionName: string, filterField?: string, filterValue?: any): Promise<number> {
   try {
-    let q = collection(db, collectionName);
+    let q: Query<DocumentData>;
     
     if (filterField && filterValue !== undefined) {
       q = query(collection(db, collectionName), where(filterField, "==", filterValue));
+    } else {
+      q = collection(db, collectionName);
     }
     
     const snapshot = await getCountFromServer(q);
@@ -82,8 +84,21 @@ export async function getStudentProgress(studentId: string): Promise<any[]> {
   }
 }
 
+// Define an interface for schedule items to ensure type safety
+interface ScheduleItem {
+  id: string;
+  startTime?: string;
+  endTime?: string;
+  className?: string;
+  subject?: string;
+  room?: string;
+  time?: string;
+  class?: string;
+  [key: string]: any; // Allow for additional properties
+}
+
 // Function to get teacher's schedule for today
-export async function getTeacherSchedule(teacherId: string): Promise<any[]> {
+export async function getTeacherSchedule(teacherId: string): Promise<ScheduleItem[]> {
   try {
     const today = new Date();
     const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
@@ -92,18 +107,24 @@ export async function getTeacherSchedule(teacherId: string): Promise<any[]> {
     const q = query(scheduleRef, where("teacherId", "==", teacherId), where("dayOfWeek", "==", dayOfWeek));
     const snapshot = await getDocs(q);
     
-    return snapshot.docs.map(doc => ({
+    // Parse the documents and ensure each item has the required properties
+    const scheduleItems: ScheduleItem[] = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
-    })).sort((a, b) => {
-      // Sort by startTime
-      const timeA = a.startTime.split(":").map(Number);
-      const timeB = b.startTime.split(":").map(Number);
-      
-      if (timeA[0] !== timeB[0]) {
-        return timeA[0] - timeB[0];
+    }));
+    
+    return scheduleItems.sort((a, b) => {
+      // Check if startTime exists before using it
+      if (a.startTime && b.startTime) {
+        const timeA = a.startTime.split(":").map(Number);
+        const timeB = b.startTime.split(":").map(Number);
+        
+        if (timeA[0] !== timeB[0]) {
+          return timeA[0] - timeB[0];
+        }
+        return timeA[1] - timeB[1];
       }
-      return timeA[1] - timeB[1];
+      return 0; // Default case if startTime is missing
     });
   } catch (error) {
     console.error("Error getting teacher schedule:", error);
