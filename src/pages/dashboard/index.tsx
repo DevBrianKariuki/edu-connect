@@ -1,9 +1,9 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth/AuthContext";
 import InfoStrip from "@/components/dashboard/InfoStrip";
+import AnimatedCounter from "@/components/dashboard/AnimatedCounter";
 import { getCollectionCount, getRecentActivities, getUpcomingEvents } from "@/lib/firebase/data";
 import { format, formatDistanceToNow } from "date-fns";
 import { 
@@ -78,7 +78,9 @@ export default function DashboardPage() {
 						</CardHeader>
 						<CardContent>
 							<div className="text-2xl font-bold">
-								{isLoading ? <Skeleton className="h-8 w-16" /> : stats.students}
+								{isLoading ? <Skeleton className="h-8 w-16" /> : 
+                  <AnimatedCounter value={stats.students} />
+                }
 							</div>
 						</CardContent>
 					</Card>
@@ -91,7 +93,9 @@ export default function DashboardPage() {
 						</CardHeader>
 						<CardContent>
 							<div className="text-2xl font-bold">
-								{isLoading ? <Skeleton className="h-8 w-16" /> : stats.teachers}
+								{isLoading ? <Skeleton className="h-8 w-16" /> : 
+                  <AnimatedCounter value={stats.teachers} />
+                }
 							</div>
 						</CardContent>
 					</Card>
@@ -104,7 +108,9 @@ export default function DashboardPage() {
 						</CardHeader>
 						<CardContent>
 							<div className="text-2xl font-bold">
-								{isLoading ? <Skeleton className="h-8 w-16" /> : stats.classes}
+								{isLoading ? <Skeleton className="h-8 w-16" /> : 
+                  <AnimatedCounter value={stats.classes} />
+                }
 							</div>
 						</CardContent>
 					</Card>
@@ -117,7 +123,9 @@ export default function DashboardPage() {
 						</CardHeader>
 						<CardContent>
 							<div className="text-2xl font-bold">
-								{isLoading ? <Skeleton className="h-8 w-16" /> : `${stats.attendanceRate}%`}
+								{isLoading ? <Skeleton className="h-8 w-16" /> : 
+                  <AnimatedCounter value={stats.attendanceRate} suffix="%" />
+                }
 							</div>
 						</CardContent>
 					</Card>
