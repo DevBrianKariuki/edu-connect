@@ -21,7 +21,8 @@ import {
 	getAllStaffMembers, 
 	StaffMember, 
 	getStaffCountByDepartment,
-	deleteStaffMember 
+	deleteStaffMember,
+	getActiveStaffCount 
 } from "@/lib/firebase/staff";
 import {
 	AlertDialog,
@@ -33,6 +34,10 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { 
+	StaffStatCardSkeleton, 
+	StaffTableSkeleton 
+} from "@/components/staff/StaffSkeletons";
 
 const StaffPage = () => {
 	const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
@@ -129,52 +134,54 @@ const StaffPage = () => {
 			</div>
 
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-				<Card>
-					<CardHeader>
-						<CardTitle className="text-lg">Total Staff</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<p className="text-3xl font-bold">
-							{isLoading ? (
-								<Loader2 className="h-6 w-6 animate-spin" />
-							) : (
-								staffMembers.length
-							)}
-						</p>
-						<p className="text-sm text-muted-foreground">Active Members</p>
-					</CardContent>
-				</Card>
-				<Card>
-					<CardHeader>
-						<CardTitle className="text-lg">Departments</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<p className="text-3xl font-bold">{Object.keys(departmentCounts).length}</p>
-						<p className="text-sm text-muted-foreground">
-							Academic & Administrative
-						</p>
-					</CardContent>
-				</Card>
-				<Card>
-					<CardHeader>
-						<CardTitle className="text-lg">New Hires</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<p className="text-3xl font-bold">
-							{isLoading ? (
-								<Loader2 className="h-6 w-6 animate-spin" />
-							) : (
-								staffMembers.filter(staff => {
-									const hireDate = new Date(staff.joinDate);
-									const oneMonthAgo = new Date();
-									oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-									return hireDate >= oneMonthAgo;
-								}).length
-							)}
-						</p>
-						<p className="text-sm text-muted-foreground">This Month</p>
-					</CardContent>
-				</Card>
+				{isLoading ? (
+					<>
+						<StaffStatCardSkeleton />
+						<StaffStatCardSkeleton />
+						<StaffStatCardSkeleton />
+					</>
+				) : (
+					<>
+						<Card className="dark:bg-secondary/30">
+							<CardHeader>
+								<CardTitle className="text-lg">Total Staff</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<p className="text-3xl font-bold">
+									{staffMembers.length}
+								</p>
+								<p className="text-sm text-muted-foreground">Active Members</p>
+							</CardContent>
+						</Card>
+						<Card className="dark:bg-secondary/30">
+							<CardHeader>
+								<CardTitle className="text-lg">Departments</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<p className="text-3xl font-bold">{Object.keys(departmentCounts).length}</p>
+								<p className="text-sm text-muted-foreground">
+									Academic & Administrative
+								</p>
+							</CardContent>
+						</Card>
+						<Card className="dark:bg-secondary/30">
+							<CardHeader>
+								<CardTitle className="text-lg">New Hires</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<p className="text-3xl font-bold">
+									{staffMembers.filter(staff => {
+										const hireDate = new Date(staff.joinDate);
+										const oneMonthAgo = new Date();
+										oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+										return hireDate >= oneMonthAgo;
+									}).length}
+								</p>
+								<p className="text-sm text-muted-foreground">This Month</p>
+							</CardContent>
+						</Card>
+					</>
+				)}
 			</div>
 
 			<div className="flex gap-4 items-center">
@@ -209,93 +216,88 @@ const StaffPage = () => {
 				</div>
 			</div>
 
-			<Card>
+			<Card className="dark:bg-secondary/30">
 				<CardContent className="p-0">
-					{isLoading ? (
-						<div className="flex justify-center items-center py-12">
-							<Loader2 className="h-8 w-8 animate-spin text-primary" />
-							<span className="ml-2 text-lg">Loading staff data...</span>
-						</div>
-					) : (
-						<Table>
-							<TableHeader>
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>Name</TableHead>
+								<TableHead>Role</TableHead>
+								<TableHead>Department</TableHead>
+								<TableHead>Email</TableHead>
+								<TableHead>Phone</TableHead>
+								<TableHead>Join Date</TableHead>
+								<TableHead>Status</TableHead>
+								<TableHead className="text-right">Actions</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{isLoading ? (
+								<StaffTableSkeleton />
+							) : filteredStaff.length === 0 ? (
 								<TableRow>
-									<TableHead>Name</TableHead>
-									<TableHead>Role</TableHead>
-									<TableHead>Department</TableHead>
-									<TableHead>Email</TableHead>
-									<TableHead>Phone</TableHead>
-									<TableHead>Join Date</TableHead>
-									<TableHead>Status</TableHead>
-									<TableHead className="text-right">Actions</TableHead>
+									<TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+										{searchTerm || selectedDepartment ? "No staff members match your search" : "No staff members found. Add your first staff member!"}
+									</TableCell>
 								</TableRow>
-							</TableHeader>
-							<TableBody>
-								{filteredStaff.length === 0 ? (
-									<TableRow>
-										<TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-											{searchTerm || selectedDepartment ? "No staff members match your search" : "No staff members found. Add your first staff member!"}
+							) : (
+								filteredStaff.map((staff) => (
+									<TableRow
+										key={staff.id}
+										className="hover:bg-muted/50">
+										<TableCell className="font-medium">
+											{staff.name}
+										</TableCell>
+										<TableCell>{staff.role}</TableCell>
+										<TableCell>{staff.department}</TableCell>
+										<TableCell>{staff.email}</TableCell>
+										<TableCell>{staff.phone}</TableCell>
+										<TableCell>{staff.joinDate}</TableCell>
+										<TableCell>
+											<span
+												className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+													staff.status
+												)}`}>
+												{staff.status.charAt(0).toUpperCase() +
+													staff.status.slice(1)}
+											</span>
+										</TableCell>
+										<TableCell className="text-right">
+											<div className="flex justify-end space-x-2">
+												<Button 
+													variant="ghost" 
+													size="sm" 
+													className="h-8 w-8 p-0"
+													onClick={() => setEditingStaff(staff)}>
+													<svg
+														width="15"
+														height="15"
+														viewBox="0 0 15 15"
+														fill="none"
+														xmlns="http://www.w3.org/2000/svg"
+														className="h-4 w-4">
+														<path
+															d="M11.8536 1.14645C11.6583 0.951184 11.3417 0.951184 11.1465 1.14645L3.71455 8.57836C3.62459 8.66832 3.55263 8.77461 3.50251 8.89155L2.04044 12.303C1.9599 12.491 2.00189 12.709 2.14646 12.8536C2.29103 12.9981 2.50905 13.0401 2.69697 12.9596L6.10847 11.4975C6.2254 11.4474 6.3317 11.3754 6.42166 11.2855L13.8536 3.85355C14.0488 3.65829 14.0488 3.34171 13.8536 3.14645L11.8536 1.14645ZM4.42166 9.28547L11.5 2.20711L12.7929 3.5L5.71455 10.5784L4.21924 11.2192L3.78081 10.7808L4.42166 9.28547Z"
+															fill="currentColor"
+															fillRule="evenodd"
+															clipRule="evenodd">
+														</path>
+													</svg>
+												</Button>
+												<Button
+													variant="ghost"
+													size="sm"
+													className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50/50"
+													onClick={() => setStaffToDelete(staff)}>
+													<Trash2 className="h-4 w-4" />
+												</Button>
+											</div>
 										</TableCell>
 									</TableRow>
-								) : (
-									filteredStaff.map((staff) => (
-										<TableRow
-											key={staff.id}
-											className="hover:bg-muted/50">
-											<TableCell className="font-medium">
-												{staff.name}
-											</TableCell>
-											<TableCell>{staff.role}</TableCell>
-											<TableCell>{staff.department}</TableCell>
-											<TableCell>{staff.email}</TableCell>
-											<TableCell>{staff.phone}</TableCell>
-											<TableCell>{staff.joinDate}</TableCell>
-											<TableCell>
-												<span
-													className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-														staff.status
-													)}`}>
-													{staff.status.charAt(0).toUpperCase() +
-														staff.status.slice(1)}
-												</span>
-											</TableCell>
-											<TableCell className="text-right">
-												<div className="flex justify-end space-x-2">
-													<Button 
-														variant="ghost" 
-														size="sm" 
-														className="h-8 w-8 p-0"
-														onClick={() => setEditingStaff(staff)}>
-														<svg
-															width="15"
-															height="15"
-															viewBox="0 0 15 15"
-															fill="none"
-															xmlns="http://www.w3.org/2000/svg"
-															className="h-4 w-4">
-															<path
-																d="M11.8536 1.14645C11.6583 0.951184 11.3417 0.951184 11.1465 1.14645L3.71455 8.57836C3.62459 8.66832 3.55263 8.77461 3.50251 8.89155L2.04044 12.303C1.9599 12.491 2.00189 12.709 2.14646 12.8536C2.29103 12.9981 2.50905 13.0401 2.69697 12.9596L6.10847 11.4975C6.2254 11.4474 6.3317 11.3754 6.42166 11.2855L13.8536 3.85355C14.0488 3.65829 14.0488 3.34171 13.8536 3.14645L11.8536 1.14645ZM4.42166 9.28547L11.5 2.20711L12.7929 3.5L5.71455 10.5784L4.21924 11.2192L3.78081 10.7808L4.42166 9.28547Z"
-																fill="currentColor"
-																fillRule="evenodd"
-																clipRule="evenodd">
-															</path>
-														</svg>
-													</Button>
-													<Button
-														variant="ghost"
-														size="sm"
-														className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50/50"
-														onClick={() => setStaffToDelete(staff)}>
-														<Trash2 className="h-4 w-4" />
-													</Button>
-												</div>
-											</TableCell>
-										</TableRow>
-									))
-								)}
-							</TableBody>
-						</Table>
-					)}
+								))
+							)}
+						</TableBody>
+					</Table>
 				</CardContent>
 			</Card>
 
