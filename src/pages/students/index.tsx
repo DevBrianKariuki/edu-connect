@@ -43,6 +43,11 @@ import { collection, addDoc, getDocs, query, where, deleteDoc, doc, Timestamp } 
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
+import { 
+    StudentTableSkeleton, 
+    ClassCardsSkeleton,
+    StudentFilterSkeleton 
+} from "@/components/students/StudentSkeletons";
 
 interface ClassData {
     id: string;
@@ -351,14 +356,16 @@ export default function StudentsPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
+                <Card className="dark:bg-secondary/30">
                     <CardHeader>
                         <CardTitle>Classes</CardTitle>
                         <CardDescription>Manage your school classes</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {classesLoading ? (
-                            <div className="text-center py-6">Loading classes...</div>
+                            <ScrollArea className="h-[240px]">
+                                <ClassCardsSkeleton />
+                            </ScrollArea>
                         ) : classes.length === 0 ? (
                             <div className="text-center py-6 text-muted-foreground">
                                 No classes found. Add your first class to get started.
@@ -400,41 +407,45 @@ export default function StudentsPage() {
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="dark:bg-secondary/30">
                     <CardHeader>
                         <CardTitle>Students List</CardTitle>
                         <CardDescription>Filter and manage students</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="grid grid-cols-1 gap-4">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
-                                <Input 
-                                    placeholder="Search by name or admission number..."
-                                    className="pl-9"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
+                        {loading ? (
+                            <StudentFilterSkeleton />
+                        ) : (
+                            <div className="grid grid-cols-1 gap-4">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+                                    <Input 
+                                        placeholder="Search by name or admission number..."
+                                        className="pl-9"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
+                                </div>
+                                <Select value={selectedClass} onValueChange={setSelectedClass}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Filter by class" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Classes</SelectItem>
+                                        {classes.map((classData) => (
+                                            <SelectItem key={classData.id} value={classData.id}>
+                                                {classData.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
-                            <Select value={selectedClass} onValueChange={setSelectedClass}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Filter by class" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Classes</SelectItem>
-                                    {classes.map((classData) => (
-                                        <SelectItem key={classData.id} value={classData.id}>
-                                            {classData.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>
 
-            <Card>
+            <Card className="dark:bg-secondary/30">
                 <CardHeader>
                     <CardTitle>Students</CardTitle>
                 </CardHeader>
@@ -453,11 +464,7 @@ export default function StudentsPage() {
                         </TableHeader>
                         <TableBody>
                             {loading ? (
-                                <TableRow>
-                                    <TableCell colSpan={7} className="text-center py-6">
-                                        Loading students...
-                                    </TableCell>
-                                </TableRow>
+                                <StudentTableSkeleton />
                             ) : studentsWithClassNames.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
