@@ -4,12 +4,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { CalendarSkeletons, UpcomingEventsSkeleton } from "@/components/calendar/CalendarSkeletons";
-import { getUpcomingEvents, Event } from "@/lib/firebase/events";
+import { getEvents, getUpcomingEvents, Event } from "@/lib/firebase/events";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ParentCalendarPage() {
     const [date, setDate] = useState<Date | undefined>(new Date());
     const [events, setEvents] = useState<Event[]>([]);
+    const [allEvents, setAllEvents] = useState<Event[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
 
@@ -18,6 +19,10 @@ export default function ParentCalendarPage() {
         try {
             const upcomingEvents = await getUpcomingEvents();
             setEvents(upcomingEvents);
+            
+            // Fetch all events to highlight dates on calendar
+            const allEventsData = await getEvents();
+            setAllEvents(allEventsData);
         } catch (error) {
             console.error("Error fetching events:", error);
             toast({
@@ -54,6 +59,15 @@ export default function ParentCalendarPage() {
                                 selected={date}
                                 onSelect={setDate}
                                 className="rounded-md border"
+                                modifiers={{
+                                  eventDay: allEvents.map(event => new Date(event.date))
+                                }}
+                                modifiersStyles={{
+                                  eventDay: {
+                                    backgroundColor: "#F2FCE2",
+                                    borderRadius: "0"
+                                  }
+                                }}
                             />
                         </CardContent>
                     </Card>
