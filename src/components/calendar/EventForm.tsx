@@ -64,7 +64,15 @@ export function EventForm({ open, onOpenChange, onSuccess }: EventFormProps) {
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
     try {
-      const id = await addEvent(values);
+      // Ensure title is always provided as it's required by the Event type
+      const eventData = {
+        title: values.title, // This is non-optional now
+        description: values.description,
+        date: values.date,
+        location: values.location,
+      };
+      
+      const id = await addEvent(eventData);
       if (id) {
         toast({
           title: "Event created",
