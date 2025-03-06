@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker, CaptionProps } from "react-day-picker";
@@ -69,7 +70,8 @@ function Calendar({
         }
         
         if (props.mode === 'single' && props.onSelect && !modifiers.disabled) {
-          props.onSelect(day);
+          // Fix: Pass undefined for the missing parameters
+          props.onSelect(day, undefined, undefined, undefined);
         }
       }}
       {...props}
@@ -89,14 +91,16 @@ function CustomCaption(props: CaptionProps) {
     const newMonth = new Date(month);
     newMonth.setMonth(month.getMonth() + increment);
     setSelectedYear(newMonth.getFullYear().toString());
-    props.activeModifiers.change(newMonth);
+    // Fix: Use the correct way to change months in react-day-picker v8
+    props.onMonthChange(newMonth);
   };
   
   const handleYearChange = (year: string) => {
     const newMonth = new Date(month);
     newMonth.setFullYear(parseInt(year));
     setSelectedYear(year);
-    props.activeModifiers.change(newMonth);
+    // Fix: Use the correct way to change months in react-day-picker v8
+    props.onMonthChange(newMonth);
   };
   
   return (
