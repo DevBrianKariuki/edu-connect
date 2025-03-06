@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker, CaptionProps } from "react-day-picker";
@@ -64,6 +63,15 @@ function Calendar({
         IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" {...props} />,
         Caption: CustomCaption
       }}
+      onDayClick={(day, modifiers, e) => {
+        if (props.onDayClick) {
+          props.onDayClick(day, modifiers, e);
+        }
+        
+        if (props.mode === 'single' && props.onSelect && !modifiers.disabled) {
+          props.onSelect(day);
+        }
+      }}
       {...props}
     />
   );
@@ -73,36 +81,67 @@ Calendar.displayName = "Calendar";
 function CustomCaption(props: CaptionProps) {
   const month = props.displayMonth;
   
+  const [selectedYear, setSelectedYear] = React.useState(month.getFullYear().toString());
+  
   const years = Array.from({ length: 121 }, (_, i) => new Date().getFullYear() - 100 + i);
+  
+  const handleMonthChange = (increment: number) => {
+    const newMonth = new Date(month);
+    newMonth.setMonth(month.getMonth() + increment);
+    setSelectedYear(newMonth.getFullYear().toString());
+    props.activeModifiers.change(newMonth);
+  };
+  
+  const handleYearChange = (year: string) => {
+    const newMonth = new Date(month);
+    newMonth.setFullYear(parseInt(year));
+    setSelectedYear(year);
+    props.activeModifiers.change(newMonth);
+  };
   
   return (
     <div className="flex items-center justify-center gap-1">
-      <span className="text-sm font-medium">
-        {month.toLocaleString("default", { month: "long" })}
-      </span>
-      <Select
-        value={month.getFullYear().toString()}
-        onValueChange={(year) => {
-          const newMonth = new Date(month);
-          newMonth.setFullYear(parseInt(year));
-          
-          // Use the DayPicker context to change month
-          if (typeof props.onMonthChange === 'function') {
-            props.onMonthChange(newMonth);
-          }
-        }}
+      <button
+        className={cn(
+          buttonVariants({ variant: "outline" }),
+          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute left-1"
+        )}
+        onClick={() => handleMonthChange(-1)}
       >
-        <SelectTrigger className="h-7 w-[70px] px-2 text-xs">
-          <SelectValue placeholder={month.getFullYear()} />
-        </SelectTrigger>
-        <SelectContent className="h-[200px] overflow-y-auto">
-          {years.map((year) => (
-            <SelectItem key={year} value={year.toString()} className="text-xs">
-              {year}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        <ChevronLeft className="h-4 w-4" />
+      </button>
+      
+      <div className="flex items-center">
+        <span className="text-sm font-medium mr-1">
+          {month.toLocaleString("default", { month: "long" })}
+        </span>
+        
+        <Select
+          value={selectedYear}
+          onValueChange={handleYearChange}
+        >
+          <SelectTrigger className="h-7 w-[70px] px-2 text-xs">
+            <SelectValue placeholder={selectedYear} />
+          </SelectTrigger>
+          <SelectContent className="h-[200px] overflow-y-auto">
+            {years.map((year) => (
+              <SelectItem key={year} value={year.toString()} className="text-xs">
+                {year}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <button
+        className={cn(
+          buttonVariants({ variant: "outline" }),
+          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute right-1"
+        )}
+        onClick={() => handleMonthChange(1)}
+      >
+        <ChevronRight className="h-4 w-4" />
+      </button>
     </div>
   );
 }
