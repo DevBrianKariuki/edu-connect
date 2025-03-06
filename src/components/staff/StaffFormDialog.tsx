@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
 	Dialog,
 	DialogContent,
@@ -28,6 +28,8 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "sonner";
 import { addStaffMember, updateStaffMember } from "@/lib/firebase/staff";
+import { Camera, X } from "lucide-react";
+import { uploadImage } from "@/lib/utils";
 
 const phoneRegex = /^\+?\d{10,15}$/;
 
@@ -41,6 +43,7 @@ const staffFormSchema = z.object({
 	role: z.string().min(1, "Please select a role"),
 	joinDate: z.string().min(1, "Join date is required"),
 	status: z.enum(["active", "inactive"]),
+	profilePhotoUrl: z.string().optional(),
 });
 
 export type StaffFormData = z.infer<typeof staffFormSchema>;
@@ -59,6 +62,10 @@ export function StaffFormDialog({
 	initialData,
 }: StaffFormDialogProps) {
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [photoPreview, setPhotoPreview] = useState<string | null>(
+		initialData?.profilePhotoUrl || null
+	);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const form = useForm<StaffFormData>({
 		resolver: zodResolver(staffFormSchema),
@@ -71,6 +78,7 @@ export function StaffFormDialog({
 			joinDate:
 				initialData?.joinDate || new Date().toISOString().split("T")[0],
 			status: initialData?.status || "active",
+			profilePhotoUrl: initialData?.profilePhotoUrl || "",
 		},
 	});
 
@@ -90,6 +98,7 @@ export function StaffFormDialog({
 			
 			onSubmit(data);
 			form.reset();
+			setPhotoPreview(null);
 		} catch (error) {
 			console.error("Error submitting staff form:", error);
 			toast.error("Failed to submit staff details");
@@ -98,9 +107,40 @@ export function StaffFormDialog({
 		}
 	};
 
+	const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		try {
+			// Preview the image
+			const reader = new FileReader();
+			reader.onload = (event) => {
+				if (event.target?.result) {
+					setPhotoPreview(event.target.result as string);
+				}
+			};
+			reader.readAsDataURL(file);
+
+			// Upload the image
+			const imageUrl = await uploadImage(file, "staff-photos");
+			form.setValue("profilePhotoUrl", imageUrl);
+		} catch (error) {
+			console.error("Error uploading image:", error);
+			toast.error("Failed to upload profile photo");
+		}
+	};
+
+	const removePhoto = () => {
+		setPhotoPreview(null);
+		form.setValue("profilePhotoUrl", "");
+		if (fileInputRef.current) {
+			fileInputRef.current.value = "";
+		}
+	};
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-[525px] dark:bg-background dark:border-border">
+			<DialogContent className="sm:max-w-[650px] dark:bg-background dark:border-border">
 				<DialogHeader>
 					<DialogTitle className="text-2xl font-bold">
 						{initialData
@@ -112,6 +152,46 @@ export function StaffFormDialog({
 					<form
 						onSubmit={form.handleSubmit(handleSubmit)}
 						className="space-y-6">
+						
+						{/* Profile Photo */}
+						<div className="flex justify-center mb-6">
+							<div className="relative">
+								<div 
+									className="w-24 h-24 rounded-full bg-secondary flex items-center justify-center overflow-hidden border-2 border-primary/20"
+									onClick={() => fileInputRef.current?.click()}
+								>
+									{photoPreview ? (
+										<img 
+											src={photoPreview} 
+											alt="Profile Preview" 
+											className="w-full h-full object-cover"
+										/>
+									) : (
+										<Camera className="h-8 w-8 text-muted-foreground" />
+									)}
+								</div>
+								{photoPreview && (
+									<button
+										type="button"
+										className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1"
+										onClick={removePhoto}
+									>
+										<X className="h-3 w-3" />
+									</button>
+								)}
+								<input
+									ref={fileInputRef}
+									type="file"
+									accept="image/*"
+									className="hidden"
+									onChange={handleFileChange}
+								/>
+								<p className="text-xs text-center mt-2 text-muted-foreground">
+									Click to upload photo
+								</p>
+							</div>
+						</div>
+
 						<div className="grid grid-cols-2 gap-4">
 							<FormField
 								control={form.control}

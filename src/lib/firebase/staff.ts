@@ -61,6 +61,7 @@ export async function getAllStaffMembers(): Promise<StaffMember[]> {
         role: data.role,
         joinDate: data.joinDate,
         status: data.status as "active" | "inactive",
+        profilePhotoUrl: data.profilePhotoUrl || "",
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date()
       };
@@ -87,6 +88,7 @@ export async function getStaffMembersByDepartment(department: string): Promise<S
         role: data.role,
         joinDate: data.joinDate,
         status: data.status as "active" | "inactive",
+        profilePhotoUrl: data.profilePhotoUrl || "",
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date()
       };
@@ -94,6 +96,36 @@ export async function getStaffMembersByDepartment(department: string): Promise<S
   } catch (error) {
     console.error("Error getting staff by department:", error);
     throw new Error("Failed to get staff by department");
+  }
+}
+
+export async function getTeachers(): Promise<StaffMember[]> {
+  try {
+    const q = query(
+      collection(db, STAFF_COLLECTION), 
+      where("role", "in", ["Teacher", "Head of Department"])
+    );
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        department: data.department,
+        role: data.role,
+        joinDate: data.joinDate,
+        status: data.status as "active" | "inactive",
+        profilePhotoUrl: data.profilePhotoUrl || "",
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date()
+      };
+    });
+  } catch (error) {
+    console.error("Error getting teachers:", error);
+    throw new Error("Failed to get teachers");
   }
 }
 

@@ -1,10 +1,10 @@
 
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Search, UserPlus, Users, Book, School } from "lucide-react";
+import { ArrowLeft, Search, UserPlus, Users, Book, School, Pencil, Trash2 } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -14,17 +14,21 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Skeleton } from "@/components/ui/skeleton";
 import StudentFormDialog from "@/components/students/StudentFormDialog";
+import { ClassFormDialog } from "@/components/classes/ClassFormDialog";
+import { getClassById, deleteClass } from "@/lib/firebase/classes";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface ClassData {
     id: string;
     name: string;
     capacity: number;
     teacher: string;
+    teacherId?: string;
     students: number;
     createdAt?: any;
 }
@@ -45,12 +49,14 @@ interface StudentData {
 
 export default function ClassDetailsPage() {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const [classData, setClassData] = useState<ClassData | null>(null);
     const [students, setStudents] = useState<StudentData[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [showAddStudentDialog, setShowAddStudentDialog] = useState(false);
-    const { toast } = useToast();
+    const [showEditClassDialog, setShowEditClassDialog] = useState(false);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
     useEffect(() => {
         if (!id) return;
@@ -61,33 +67,18 @@ export default function ClassDetailsPage() {
 
     const fetchClassDetails = async () => {
         try {
-            const classDocRef = doc(db, "classes", id!);
-            const classSnapshot = await getDoc(classDocRef);
-            
-            if (classSnapshot.exists()) {
-                setClassData({
-                    id: classSnapshot.id,
-                    ...classSnapshot.data() as Omit<ClassData, 'id'>
-                });
-            } else {
-                toast({
-                    title: "Error",
-                    description: "Class not found",
-                    variant: "destructive",
-                });
-            }
+            if (!id) return;
+            const classDetails = await getClassById(id);
+            setClassData(classDetails);
         } catch (error) {
             console.error("Error fetching class details:", error);
-            toast({
-                title: "Error",
-                description: "Failed to load class details",
-                variant: "destructive",
-            });
+            toast.error("Failed to load class details");
         }
     };
 
     const fetchClassStudents = async () => {
         try {
+            if (!id) return;
             setLoading(true);
             const studentsCollection = collection(db, "students");
             const q = query(studentsCollection, where("class", "==", id));
@@ -106,11 +97,7 @@ export default function ClassDetailsPage() {
             setStudents(studentsData);
         } catch (error) {
             console.error("Error fetching class students:", error);
-            toast({
-                title: "Error",
-                description: "Failed to load students",
-                variant: "destructive",
-            });
+            toast.error("Failed to load students");
         } finally {
             setLoading(false);
         }
@@ -134,6 +121,33 @@ export default function ClassDetailsPage() {
         }
     };
 
+    const handleEditClass = async (data: any) => {
+        try {
+            // After updating the class, refresh the class details
+            await fetchClassDetails();
+            setShowEditClassDialog(false);
+            return true;
+        } catch (error) {
+            console.error("Error updating class:", error);
+            throw error;
+        }
+    };
+
+    const handleDeleteClass = async () => {
+        try {
+            if (!id) return;
+            
+            await deleteClass(id);
+            toast.success("Class deleted successfully");
+            navigate("/classes"); // Redirect to classes list
+        } catch (error: any) {
+            console.error("Error deleting class:", error);
+            toast.error(error.message || "Failed to delete class");
+        } finally {
+            setShowDeleteDialog(false);
+        }
+    };
+
     const filteredStudents = students.filter(student => {
         if (!searchQuery) return true;
         
@@ -146,7 +160,7 @@ export default function ClassDetailsPage() {
         <div className="container mx-auto p-6 space-y-6">
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-4">
-                    <Link to="/students">
+                    <Link to="/classes">
                         <Button variant="outline" size="icon">
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
@@ -155,10 +169,26 @@ export default function ClassDetailsPage() {
                         {loading ? <Skeleton className="h-9 w-32" /> : classData?.name || "Class Details"}
                     </h1>
                 </div>
-                <Button onClick={() => setShowAddStudentDialog(true)}>
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Add Student to Class
-                </Button>
+                <div className="flex gap-2">
+                    <Button 
+                        variant="outline" 
+                        onClick={() => setShowEditClassDialog(true)}
+                    >
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Edit Class
+                    </Button>
+                    <Button 
+                        variant="destructive"
+                        onClick={() => setShowDeleteDialog(true)}
+                    >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Class
+                    </Button>
+                    <Button onClick={() => setShowAddStudentDialog(true)}>
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add Student
+                    </Button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -279,6 +309,42 @@ export default function ClassDetailsPage() {
                     defaultClassId={id}
                 />
             )}
+
+            {classData && (
+                <ClassFormDialog
+                    open={showEditClassDialog}
+                    onOpenChange={setShowEditClassDialog}
+                    onSubmit={handleEditClass}
+                    initialData={classData}
+                />
+            )}
+
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete class?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete {classData?.name}. This action cannot be undone.
+                            {students.length > 0 && (
+                                <p className="mt-2 text-destructive font-medium">
+                                    Warning: This class has {students.length} students enrolled. 
+                                    You must remove or reassign all students before deleting the class.
+                                </p>
+                            )}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteClass}
+                            className="bg-destructive hover:bg-destructive/90"
+                            disabled={students.length > 0}
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
