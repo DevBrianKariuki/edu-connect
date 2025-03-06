@@ -91,16 +91,23 @@ function CustomCaption(props: CaptionProps) {
     const newMonth = new Date(month);
     newMonth.setMonth(month.getMonth() + increment);
     setSelectedYear(newMonth.getFullYear().toString());
-    // Fix: Use the correct way to change months in react-day-picker v8
-    props.onMonthChange(newMonth);
+    
+    // Use the correct approach for react-day-picker v8
+    // Instead of onMonthChange, we need to use the DayPicker's context to change the month
+    if (props.onNavClick) {
+      props.onNavClick(newMonth, increment > 0 ? 'next' : 'prev');
+    }
   };
   
   const handleYearChange = (year: string) => {
     const newMonth = new Date(month);
     newMonth.setFullYear(parseInt(year));
     setSelectedYear(year);
-    // Fix: Use the correct way to change months in react-day-picker v8
-    props.onMonthChange(newMonth);
+    
+    // Use the correct approach for react-day-picker v8
+    if (props.onNavClick) {
+      props.onNavClick(newMonth, 'goto');
+    }
   };
   
   return (
