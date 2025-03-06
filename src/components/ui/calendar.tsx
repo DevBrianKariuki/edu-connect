@@ -72,7 +72,7 @@ Calendar.displayName = "Calendar";
 
 function CustomCaption({ 
   displayMonth,
-  onMonthChange
+  goToMonth
 }: CaptionProps) {
   const month = displayMonth;
   
@@ -88,7 +88,9 @@ function CustomCaption({
         onValueChange={(year) => {
           const newMonth = new Date(month);
           newMonth.setFullYear(parseInt(year));
-          onMonthChange?.(newMonth);
+          if (goToMonth) {
+            goToMonth(newMonth);
+          }
         }}
       >
         <SelectTrigger className="h-7 w-[70px] px-2 text-xs">
