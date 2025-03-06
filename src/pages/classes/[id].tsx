@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,18 +19,8 @@ import { db } from "@/lib/firebase/config";
 import { Skeleton } from "@/components/ui/skeleton";
 import StudentFormDialog from "@/components/students/StudentFormDialog";
 import { ClassFormDialog } from "@/components/classes/ClassFormDialog";
-import { getClassById, deleteClass } from "@/lib/firebase/classes";
+import { getClassById, deleteClass, ClassData } from "@/lib/firebase/classes";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-
-interface ClassData {
-    id: string;
-    name: string;
-    capacity: number;
-    teacher: string;
-    teacherId?: string;
-    students: number;
-    createdAt?: any;
-}
 
 interface StudentData {
     id: string;
@@ -69,7 +58,10 @@ export default function ClassDetailsPage() {
         try {
             if (!id) return;
             const classDetails = await getClassById(id);
-            setClassData(classDetails);
+            setClassData({
+                ...classDetails,
+                students: classDetails.students || 0
+            });
         } catch (error) {
             console.error("Error fetching class details:", error);
             toast.error("Failed to load class details");
@@ -105,15 +97,8 @@ export default function ClassDetailsPage() {
 
     const handleAddStudent = async (data: any) => {
         try {
-            // We'll reuse the same function logic but force the class to be the current class
             data.class = id;
-            
-            // Since the handleAddStudent function isn't directly accessible here,
-            // you'd need to implement similar logic or refactor to share functionality
-            
-            // After adding the student, refresh the students list
             await fetchClassStudents();
-            
             return true;
         } catch (error: any) {
             console.error("Error adding student:", error);
@@ -123,7 +108,6 @@ export default function ClassDetailsPage() {
 
     const handleEditClass = async (data: any) => {
         try {
-            // After updating the class, refresh the class details
             await fetchClassDetails();
             setShowEditClassDialog(false);
             return true;
@@ -139,7 +123,7 @@ export default function ClassDetailsPage() {
             
             await deleteClass(id);
             toast.success("Class deleted successfully");
-            navigate("/classes"); // Redirect to classes list
+            navigate("/classes");
         } catch (error: any) {
             console.error("Error deleting class:", error);
             toast.error(error.message || "Failed to delete class");

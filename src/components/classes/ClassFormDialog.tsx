@@ -32,7 +32,7 @@ import { getAllStaffMembers } from "@/lib/firebase/staff";
 
 const classFormSchema = z.object({
   name: z.string().min(2, "Class name must be at least 2 characters"),
-  capacity: z.string().transform(val => parseInt(val, 10)),
+  capacity: z.coerce.number().int().positive("Capacity must be a positive number"),
   teacherId: z.string().min(1, "Please select a teacher"),
 });
 
@@ -65,7 +65,7 @@ export function ClassFormDialog({
     resolver: zodResolver(classFormSchema),
     defaultValues: {
       name: initialData?.name || "",
-      capacity: initialData?.capacity ? String(initialData.capacity) : "30",
+      capacity: initialData?.capacity || 30,
       teacherId: initialData?.teacherId || "",
     },
   });

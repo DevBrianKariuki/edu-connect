@@ -8,7 +8,7 @@ export interface ClassData {
   capacity: number;
   teacher: string;
   teacherId: string;
-  students?: number;
+  students: number;  // Make sure this is required, not optional
   createdAt?: Date;
   updatedAt?: Date;
 }
