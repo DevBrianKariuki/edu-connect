@@ -1,10 +1,17 @@
 
 import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker } from "react-day-picker";
+import { ChevronLeft, ChevronRight, ChevronsUpDown } from "lucide-react";
+import { DayPicker, CaptionProps } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
@@ -55,11 +62,46 @@ function Calendar({
       components={{
         IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" {...props} />,
         IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" {...props} />,
+        Caption: (props) => <CustomCaption {...props} />
       }}
       {...props}
     />
   );
 }
 Calendar.displayName = "Calendar";
+
+function CustomCaption(props: CaptionProps) {
+  const { displayMonth, currMonth } = props;
+  const month = displayMonth || currMonth;
+  
+  const years = Array.from({ length: 121 }, (_, i) => new Date().getFullYear() - 100 + i);
+  
+  return (
+    <div className="flex items-center justify-center gap-1">
+      <span className="text-sm font-medium">
+        {month.toLocaleString("default", { month: "long" })}
+      </span>
+      <Select
+        value={month.getFullYear().toString()}
+        onValueChange={(year) => {
+          const newMonth = new Date(month);
+          newMonth.setFullYear(parseInt(year));
+          props.onMonthChange?.(newMonth);
+        }}
+      >
+        <SelectTrigger className="h-7 w-[70px] px-2 text-xs">
+          <SelectValue placeholder={month.getFullYear()} />
+        </SelectTrigger>
+        <SelectContent className="h-[200px] overflow-y-auto">
+          {years.map((year) => (
+            <SelectItem key={year} value={year.toString()} className="text-xs">
+              {year}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
 
 export { Calendar };
