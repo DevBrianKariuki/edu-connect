@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker, CaptionProps } from "react-day-picker";
+import { DayPicker, CaptionProps, useNavigation } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -70,7 +70,6 @@ function Calendar({
         }
         
         if (props.mode === 'single' && props.onSelect && !modifiers.disabled) {
-          // Fix: Pass undefined for the missing parameters
           props.onSelect(day, undefined, undefined, undefined);
         }
       }}
@@ -81,7 +80,8 @@ function Calendar({
 Calendar.displayName = "Calendar";
 
 function CustomCaption(props: CaptionProps) {
-  const month = props.displayMonth;
+  const { displayMonth: month } = props;
+  const { goToMonth, nextMonth, previousMonth } = useNavigation();
   
   const [selectedYear, setSelectedYear] = React.useState(month.getFullYear().toString());
   
@@ -92,10 +92,10 @@ function CustomCaption(props: CaptionProps) {
     newMonth.setMonth(month.getMonth() + increment);
     setSelectedYear(newMonth.getFullYear().toString());
     
-    // Use the correct approach for react-day-picker v8
-    // Instead of onMonthChange, we need to use the DayPicker's context to change the month
-    if (props.onNavClick) {
-      props.onNavClick(newMonth, increment > 0 ? 'next' : 'prev');
+    if (increment > 0 && nextMonth) {
+      goToMonth(nextMonth);
+    } else if (increment < 0 && previousMonth) {
+      goToMonth(previousMonth);
     }
   };
   
@@ -104,10 +104,7 @@ function CustomCaption(props: CaptionProps) {
     newMonth.setFullYear(parseInt(year));
     setSelectedYear(year);
     
-    // Use the correct approach for react-day-picker v8
-    if (props.onNavClick) {
-      props.onNavClick(newMonth, 'goto');
-    }
+    goToMonth(newMonth);
   };
   
   return (
@@ -118,6 +115,7 @@ function CustomCaption(props: CaptionProps) {
           "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute left-1"
         )}
         onClick={() => handleMonthChange(-1)}
+        disabled={!previousMonth}
       >
         <ChevronLeft className="h-4 w-4" />
       </button>
@@ -150,6 +148,7 @@ function CustomCaption(props: CaptionProps) {
           "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute right-1"
         )}
         onClick={() => handleMonthChange(1)}
+        disabled={!nextMonth}
       >
         <ChevronRight className="h-4 w-4" />
       </button>
