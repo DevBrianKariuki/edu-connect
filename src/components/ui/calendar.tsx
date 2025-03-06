@@ -85,9 +85,10 @@ function CustomCaption(props: CaptionProps) {
         onValueChange={(year) => {
           const newMonth = new Date(month);
           newMonth.setFullYear(parseInt(year));
-          // Use the correct property from DayPicker's CaptionProps interface
-          if (props.id && typeof props.actions?.changeMonth === 'function') {
-            props.actions.changeMonth(newMonth);
+          
+          // Get the DayPicker context object which has methods to handle navigation
+          if (typeof props.onMonthChange === 'function') {
+            props.onMonthChange(newMonth);
           }
         }}
       >
