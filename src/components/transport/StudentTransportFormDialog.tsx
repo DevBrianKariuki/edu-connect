@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
 	Dialog,
@@ -26,17 +27,14 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { CalendarIcon, ImagePlus, X } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CalendarIcon } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+import ProfileImageUpload from "@/components/shared/ProfileImageUpload";
 
 const validateKenyanPhone = (phone: string) => {
     const cleanPhone = phone.replace(/\s+|-|\(|\)/g, '');
@@ -79,18 +77,7 @@ const studentTransportFormSchema = z.object({
 	dateOfBirth: z.date({
 		required_error: "Date of birth is required",
 	}),
-	profilePic: z
-		.any()
-		.refine((file) => !file || file instanceof File, "Please upload a valid file")
-		.refine(
-			(file) => !file || file.size <= MAX_FILE_SIZE,
-			"File size must be less than 5MB"
-		)
-		.refine(
-			(file) => !file || ACCEPTED_IMAGE_TYPES.includes(file.type),
-			"Only .jpg, .jpeg, .png and .webp files are accepted"
-		)
-		.optional(),
+	profilePic: z.string().optional(),
 });
 
 type StudentTransportFormData = z.infer<typeof studentTransportFormSchema>;
@@ -114,7 +101,6 @@ const StudentTransportFormDialog = ({
 	onOpenChange,
 	onSubmit,
 }: StudentTransportFormDialogProps) => {
-	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 	const [classes, setClasses] = useState<ClassData[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [savedFormState, setSavedFormState] = useState<any>(null);
@@ -131,30 +117,13 @@ const StudentTransportFormDialog = ({
 			dropoffPoint: "",
 			guardianContact: "",
 			dateOfBirth: undefined,
-			profilePic: undefined,
+			profilePic: "",
 		},
 	});
 
-	// Clean up preview URL when component unmounts
-    useEffect(() => {
-        return () => {
-            if (previewUrl) {
-                URL.revokeObjectURL(previewUrl);
-            }
-        };
-    }, []);
-
 	useEffect(() => {
 		if (open && savedFormState) {
-		    // Clean up previous preview URL if it exists
-            if (previewUrl) {
-                URL.revokeObjectURL(previewUrl);
-            }
-            
 			Object.entries(savedFormState).forEach(([key, value]) => {
-			    // Skip profilePic as it needs special handling
-                if (key === 'profilePic') return;
-                
                 // Handle date conversion
                 if (key === 'dateOfBirth' && value) {
                     form.setValue(key as any, new Date(value as string));
@@ -162,15 +131,6 @@ const StudentTransportFormDialog = ({
                     form.setValue(key as any, value);
                 }
 			});
-			
-			if (savedFormState.previewUrl) {
-				setPreviewUrl(savedFormState.previewUrl);
-			}
-			
-			// If there was a saved file, we need to handle it specially
-            if (savedFormState.profilePic instanceof File) {
-                form.setValue('profilePic', savedFormState.profilePic);
-            }
 		}
 	}, [open, form, savedFormState]);
 
@@ -212,47 +172,7 @@ const StudentTransportFormDialog = ({
 		
 		onSubmit(formattedData);
 		form.reset();
-		if (previewUrl) {
-            URL.revokeObjectURL(previewUrl);
-            setPreviewUrl(null);
-        }
 		setSavedFormState(null);
-	};
-
-	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, onChange: (value: any) => void) => {
-		const file = e.target.files?.[0];
-		if (!file) return;
-
-        // Clean up previous preview URL if it exists
-        if (previewUrl) {
-            URL.revokeObjectURL(previewUrl);
-        }
-
-		if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-			form.setError("profilePic", { 
-				message: "Only .jpg, .jpeg, .png and .webp files are accepted" 
-			});
-			return;
-		}
-
-		if (file.size > MAX_FILE_SIZE) {
-			form.setError("profilePic", { 
-				message: "File size must be less than 5MB" 
-			});
-			return;
-		}
-
-		const url = URL.createObjectURL(file);
-		setPreviewUrl(url);
-		onChange(file);
-	};
-
-	const removeProfilePic = () => {
-		form.setValue("profilePic", undefined);
-		if (previewUrl) {
-            URL.revokeObjectURL(previewUrl);
-            setPreviewUrl(null);
-        }
 	};
 
 	return (
@@ -260,8 +180,7 @@ const StudentTransportFormDialog = ({
 			if (!newOpen) {
 				const currentValues = form.getValues();
 				setSavedFormState({
-					...currentValues,
-					previewUrl: previewUrl
+					...currentValues
 				});
 			}
 			onOpenChange(newOpen);
@@ -276,50 +195,13 @@ const StudentTransportFormDialog = ({
 						className="space-y-4">
 						
 						<div className="flex justify-center mb-4">
-							<FormField
+							<ProfileImageUpload
 								control={form.control}
 								name="profilePic"
-								render={({ field: { value, onChange, ...field } }) => (
-									<FormItem className="flex flex-col items-center">
-										<FormLabel className="cursor-pointer">
-											{previewUrl ? (
-												<div className="relative">
-													<Avatar className="w-24 h-24">
-														<AvatarImage src={previewUrl} alt="Preview" />
-                                                        <AvatarFallback>
-                                                            {form.getValues().name?.[0] || 'ST'}
-                                                        </AvatarFallback>
-													</Avatar>
-													<button 
-														type="button"
-														className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1"
-														onClick={(e) => {
-															e.preventDefault();
-															removeProfilePic();
-														}}
-													>
-														<X size={14} />
-													</button>
-												</div>
-											) : (
-												<div className="w-24 h-24 border-2 border-dashed rounded-full flex items-center justify-center bg-muted">
-													<div className="flex flex-col items-center">
-														<ImagePlus size={24} className="mb-1" />
-														<span className="text-xs">Add Photo</span>
-													</div>
-												</div>
-											)}
-											<input
-												type="file"
-												className="hidden"
-												accept="image/*"
-												onChange={(e) => handleFileChange(e, onChange)}
-												{...field}
-											/>
-										</FormLabel>
-										<FormMessage />
-									</FormItem>
-								)}
+								getInitials={() => {
+									const name = form.getValues().name;
+									return name ? name.charAt(0).toUpperCase() : "ST";
+								}}
 							/>
 						</div>
 
@@ -517,8 +399,7 @@ const StudentTransportFormDialog = ({
 								onClick={() => {
 									const currentValues = form.getValues();
 									setSavedFormState({
-										...currentValues,
-										previewUrl: previewUrl
+										...currentValues
 									});
 									onOpenChange(false);
 								}}>

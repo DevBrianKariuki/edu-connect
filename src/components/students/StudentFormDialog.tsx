@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
     Dialog,
@@ -28,10 +29,10 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, ImagePlus, X } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import ProfileImageUpload from "@/components/shared/ProfileImageUpload";
 
 interface ClassData {
     id: string;
@@ -48,9 +49,6 @@ interface StudentFormDialogProps {
     classes: ClassData[];
     defaultClassId?: string;
 }
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const validateKenyanPhone = (phone: string) => {
     const cleanPhone = phone.replace(/\s+|-|\(|\)/g, '');
@@ -94,18 +92,7 @@ const formSchema = z.object({
         }),
     guardianEmail: z.string().email("Invalid email").optional().or(z.literal("")),
     address: z.string().min(1, "Address is required"),
-    profilePhoto: z
-        .any()
-        .refine((file) => !file || file instanceof File, "Please upload a valid file")
-        .refine(
-            (file) => !file || file.size <= MAX_FILE_SIZE,
-            "File size must be less than 5MB"
-        )
-        .refine(
-            (file) => !file || ACCEPTED_IMAGE_TYPES.includes(file.type),
-            "Only .jpg, .jpeg, .png and .webp files are accepted"
-        )
-        .optional(),
+    profilePhoto: z.string().optional(),
 });
 
 const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
@@ -117,7 +104,6 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
 }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formSubmitError, setFormSubmitError] = useState<string | null>(null);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [savedFormState, setSavedFormState] = useState<any>(null);
     const [datePickerOpen, setDatePickerOpen] = useState(false);
 
@@ -135,7 +121,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
             guardianContact: "",
             guardianEmail: "",
             address: "",
-            profilePhoto: undefined,
+            profilePhoto: "",
         },
     });
 
@@ -147,37 +133,15 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
 
     useEffect(() => {
         if (open && savedFormState) {
-            if (previewUrl) {
-                URL.revokeObjectURL(previewUrl);
-            }
-            
             Object.entries(savedFormState).forEach(([key, value]) => {
-                if (key === 'profilePhoto') return;
-                
                 if (key === 'dateOfBirth' && value) {
                     form.setValue(key as any, new Date(value as string));
                 } else {
                     form.setValue(key as any, value);
                 }
             });
-            
-            if (savedFormState.previewUrl) {
-                setPreviewUrl(savedFormState.previewUrl);
-            }
-            
-            if (savedFormState.profilePhoto instanceof File) {
-                form.setValue('profilePhoto', savedFormState.profilePhoto);
-            }
         }
     }, [open, form, savedFormState]);
-
-    useEffect(() => {
-        return () => {
-            if (previewUrl) {
-                URL.revokeObjectURL(previewUrl);
-            }
-        };
-    }, []);
 
     const handleFormSubmit = async (values: z.infer<typeof formSchema>) => {
         setIsSubmitting(true);
@@ -192,10 +156,6 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
             const success = await onSubmit(formattedValues);
             if (success) {
                 form.reset();
-                if (previewUrl) {
-                    URL.revokeObjectURL(previewUrl);
-                    setPreviewUrl(null);
-                }
                 setSavedFormState(null);
                 onOpenChange(false);
             }
@@ -206,41 +166,6 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
         }
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, onChange: (value: any) => void) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        if (previewUrl) {
-            URL.revokeObjectURL(previewUrl);
-        }
-
-        if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-            form.setError("profilePhoto", { 
-                message: "Only .jpg, .jpeg, .png and .webp files are accepted" 
-            });
-            return;
-        }
-
-        if (file.size > MAX_FILE_SIZE) {
-            form.setError("profilePhoto", { 
-                message: "File size must be less than 5MB" 
-            });
-            return;
-        }
-
-        const url = URL.createObjectURL(file);
-        setPreviewUrl(url);
-        onChange(file);
-    };
-
-    const removeProfilePhoto = () => {
-        form.setValue("profilePhoto", undefined);
-        if (previewUrl) {
-            URL.revokeObjectURL(previewUrl);
-            setPreviewUrl(null);
-        }
-    };
-
     return (
         <Dialog
             open={open}
@@ -248,8 +173,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                 if (!newOpen) {
                     const currentValues = form.getValues();
                     setSavedFormState({
-                        ...currentValues,
-                        previewUrl: previewUrl
+                        ...currentValues
                     });
                 }
                 onOpenChange(newOpen);
@@ -263,50 +187,14 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
                         <div className="flex justify-center mb-4">
-                            <FormField
+                            <ProfileImageUpload
                                 control={form.control}
                                 name="profilePhoto"
-                                render={({ field: { value, onChange, ...field } }) => (
-                                    <FormItem className="flex flex-col items-center">
-                                        <FormLabel className="cursor-pointer">
-                                            {previewUrl ? (
-                                                <div className="relative">
-                                                    <Avatar className="w-24 h-24">
-                                                        <AvatarImage src={previewUrl} alt="Preview" />
-                                                        <AvatarFallback>
-                                                            {form.getValues().firstName?.[0]}{form.getValues().lastName?.[0]}
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                    <button 
-                                                        type="button"
-                                                        className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            removeProfilePhoto();
-                                                        }}
-                                                    >
-                                                        <X size={14} />
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <div className="w-24 h-24 border-2 border-dashed rounded-full flex items-center justify-center bg-muted">
-                                                    <div className="flex flex-col items-center">
-                                                        <ImagePlus size={24} className="mb-1" />
-                                                        <span className="text-xs">Add Photo</span>
-                                                    </div>
-                                                </div>
-                                            )}
-                                            <input
-                                                type="file"
-                                                className="hidden"
-                                                accept="image/*"
-                                                onChange={(e) => handleFileChange(e, onChange)}
-                                                {...field}
-                                            />
-                                        </FormLabel>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
+                                getInitials={() => {
+                                    const firstName = form.getValues().firstName;
+                                    const lastName = form.getValues().lastName;
+                                    return (firstName?.[0] || '') + (lastName?.[0] || '');
+                                }}
                             />
                         </div>
 
@@ -566,8 +454,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                 onClick={() => {
                                     const currentValues = form.getValues();
                                     setSavedFormState({
-                                        ...currentValues,
-                                        previewUrl: previewUrl
+                                        ...currentValues
                                     });
                                     onOpenChange(false);
                                 }}
