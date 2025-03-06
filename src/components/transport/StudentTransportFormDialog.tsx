@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
 	Dialog,
@@ -119,6 +118,7 @@ const StudentTransportFormDialog = ({
 	const [classes, setClasses] = useState<ClassData[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [savedFormState, setSavedFormState] = useState<any>(null);
+	const [datePickerOpen, setDatePickerOpen] = useState(false);
 
 	const form = useForm<StudentTransportFormData>({
 		resolver: zodResolver(studentTransportFormSchema),
@@ -343,7 +343,7 @@ const StudentTransportFormDialog = ({
 							render={({ field }) => (
 								<FormItem className="flex flex-col">
 									<FormLabel>Date of Birth</FormLabel>
-									<Popover>
+									<Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
 										<PopoverTrigger asChild>
 											<FormControl>
 												<Button
@@ -366,7 +366,10 @@ const StudentTransportFormDialog = ({
 											<Calendar
 												mode="single"
 												selected={field.value}
-												onSelect={field.onChange}
+												onSelect={(date) => {
+													field.onChange(date);
+													setDatePickerOpen(false);
+												}}
 												disabled={(date) =>
 													date > new Date() || date < new Date("1900-01-01")
 												}

@@ -118,8 +118,8 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formSubmitError, setFormSubmitError] = useState<string | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    
     const [savedFormState, setSavedFormState] = useState<any>(null);
+    const [datePickerOpen, setDatePickerOpen] = useState(false);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -398,7 +398,7 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                 render={({ field }) => (
                                     <FormItem className="flex flex-col">
                                         <FormLabel>Date of Birth</FormLabel>
-                                        <Popover>
+                                        <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
                                             <PopoverTrigger asChild>
                                                 <FormControl>
                                                     <Button
@@ -421,7 +421,10 @@ const StudentFormDialog: React.FC<StudentFormDialogProps> = ({
                                                 <Calendar
                                                     mode="single"
                                                     selected={field.value}
-                                                    onSelect={field.onChange}
+                                                    onSelect={(date) => {
+                                                        field.onChange(date);
+                                                        setDatePickerOpen(false);
+                                                    }}
                                                     disabled={(date) =>
                                                         date > new Date() || date < new Date("1900-01-01")
                                                     }

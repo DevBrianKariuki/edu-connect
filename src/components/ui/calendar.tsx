@@ -1,6 +1,6 @@
 
 import * as React from "react";
-import { ChevronLeft, ChevronRight, ChevronsUpDown } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker, CaptionProps } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
@@ -62,7 +62,7 @@ function Calendar({
       components={{
         IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" {...props} />,
         IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" {...props} />,
-        Caption: (props) => <CustomCaption {...props} />
+        Caption: CustomCaption
       }}
       {...props}
     />
@@ -70,8 +70,10 @@ function Calendar({
 }
 Calendar.displayName = "Calendar";
 
-function CustomCaption(props: CaptionProps) {
-  const { displayMonth } = props;
+function CustomCaption({ 
+  displayMonth,
+  onMonthChange
+}: CaptionProps) {
   const month = displayMonth;
   
   const years = Array.from({ length: 121 }, (_, i) => new Date().getFullYear() - 100 + i);
@@ -86,7 +88,7 @@ function CustomCaption(props: CaptionProps) {
         onValueChange={(year) => {
           const newMonth = new Date(month);
           newMonth.setFullYear(parseInt(year));
-          props.goToMonth(newMonth);
+          onMonthChange?.(newMonth);
         }}
       >
         <SelectTrigger className="h-7 w-[70px] px-2 text-xs">

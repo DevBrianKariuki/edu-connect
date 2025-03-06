@@ -49,6 +49,7 @@ interface EventFormProps {
 
 export function EventForm({ open, onOpenChange, onSuccess }: EventFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -147,7 +148,7 @@ export function EventForm({ open, onOpenChange, onSuccess }: EventFormProps) {
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Date</FormLabel>
-                  <Popover>
+                  <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
@@ -170,7 +171,10 @@ export function EventForm({ open, onOpenChange, onSuccess }: EventFormProps) {
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(date) => {
+                          field.onChange(date);
+                          setCalendarOpen(false);
+                        }}
                         initialFocus
                       />
                     </PopoverContent>

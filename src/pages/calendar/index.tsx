@@ -61,7 +61,9 @@ export default function CalendarPage() {
               <Calendar
                 mode="single"
                 selected={date}
-                onSelect={setDate}
+                onSelect={(selectedDate) => {
+                  setDate(selectedDate);
+                }}
                 className="rounded-md border"
                 modifiers={{
                   eventDay: allEvents.map(event => new Date(event.date))
