@@ -70,11 +70,8 @@ function Calendar({
 }
 Calendar.displayName = "Calendar";
 
-function CustomCaption({ 
-  displayMonth,
-  goToMonth
-}: CaptionProps) {
-  const month = displayMonth;
+function CustomCaption(props: CaptionProps) {
+  const month = props.displayMonth;
   
   const years = Array.from({ length: 121 }, (_, i) => new Date().getFullYear() - 100 + i);
   
@@ -88,8 +85,9 @@ function CustomCaption({
         onValueChange={(year) => {
           const newMonth = new Date(month);
           newMonth.setFullYear(parseInt(year));
-          if (goToMonth) {
-            goToMonth(newMonth);
+          const { onMonthChange } = props;
+          if (typeof onMonthChange === 'function') {
+            onMonthChange(newMonth);
           }
         }}
       >
