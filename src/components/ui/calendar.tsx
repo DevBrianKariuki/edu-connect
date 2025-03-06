@@ -71,8 +71,8 @@ function Calendar({
 Calendar.displayName = "Calendar";
 
 function CustomCaption(props: CaptionProps) {
-  const { displayMonth, currMonth } = props;
-  const month = displayMonth || currMonth;
+  const { displayMonth } = props;
+  const month = displayMonth;
   
   const years = Array.from({ length: 121 }, (_, i) => new Date().getFullYear() - 100 + i);
   
@@ -86,7 +86,7 @@ function CustomCaption(props: CaptionProps) {
         onValueChange={(year) => {
           const newMonth = new Date(month);
           newMonth.setFullYear(parseInt(year));
-          props.onMonthChange?.(newMonth);
+          props.goToMonth(newMonth);
         }}
       >
         <SelectTrigger className="h-7 w-[70px] px-2 text-xs">
