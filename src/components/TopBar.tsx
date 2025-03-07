@@ -19,35 +19,14 @@ import { differenceInDays, format } from "date-fns";
 const TopBar = () => {
     const { theme, setTheme } = useTheme();
     const [notifications, setNotifications] = useState<Array<{
-        id: number | string;
+        id: string;
         title: string;
         description: string;
         time: string;
-        type?: string;
+        type: string;
+        eventId: string;
     }>>([]);
     
-    // Sample notifications - in a real app, this would come from a backend
-    const staticNotifications = [
-        {
-            id: 1,
-            title: "New Assignment",
-            description: "Math homework due tomorrow",
-            time: "10 minutes ago"
-        },
-        {
-            id: 2,
-            title: "Grade Posted",
-            description: "Your Science test results are available",
-            time: "1 hour ago"
-        },
-        {
-            id: 3,
-            title: "School Event",
-            description: "Annual Sports Day next week",
-            time: "2 hours ago"
-        }
-    ];
-
     useEffect(() => {
         const fetchEventNotifications = async () => {
             try {
@@ -64,19 +43,18 @@ const TopBar = () => {
                         return daysUntilEvent === 2; // Events exactly 2 days away
                     })
                     .map(event => ({
-                        id: event.id,
+                        id: `event-${event.id}`,
                         title: "Event Reminder",
                         description: `${event.title} is scheduled in 2 days`,
                         time: format(new Date(), "h:mm a"),
-                        type: "event"
+                        type: "event",
+                        eventId: event.id
                     }));
                 
-                // Combine static notifications with event notifications
-                setNotifications([...eventNotifications, ...staticNotifications]);
+                setNotifications(eventNotifications);
             } catch (error) {
                 console.error("Error fetching event notifications:", error);
-                // If there's an error, still show the static notifications
-                setNotifications(staticNotifications);
+                setNotifications([]);
             }
         };
         
@@ -122,34 +100,44 @@ const TopBar = () => {
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="relative">
-                                {notifications.some(n => n.type === "event") ? (
+                                {notifications.length > 0 ? (
                                     <BellDot className="h-[1.2rem] w-[1.2rem]" />
                                 ) : (
                                     <Bell className="h-[1.2rem] w-[1.2rem]" />
                                 )}
-                                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
-                                    {notifications.length}
-                                </Badge>
+                                {notifications.length > 0 && (
+                                    <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                                        {notifications.length}
+                                    </Badge>
+                                )}
                                 <span className="sr-only">Notifications</span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-80 bg-background border shadow-lg">
                             <DropdownMenuLabel className="font-semibold">Notifications</DropdownMenuLabel>
                             <DropdownMenuSeparator className="bg-border" />
-                            {notifications.map((notification) => (
-                                <DropdownMenuItem key={notification.id} className="flex flex-col items-start gap-1 p-3">
-                                    <div className="font-medium flex items-center gap-2">
-                                        {notification.type === "event" && <Calendar className="h-4 w-4" />}
-                                        {notification.title}
-                                    </div>
-                                    <div className="text-sm text-text-secondary">{notification.description}</div>
-                                    <div className="text-xs text-text-secondary">{notification.time}</div>
-                                </DropdownMenuItem>
-                            ))}
-                            <DropdownMenuSeparator className="bg-border" />
-                            <DropdownMenuItem className="text-center justify-center text-sm text-primary">
-                                View all notifications
-                            </DropdownMenuItem>
+                            {notifications.length > 0 ? (
+                                <>
+                                    {notifications.map((notification) => (
+                                        <DropdownMenuItem key={notification.id} className="flex flex-col items-start gap-1 p-3">
+                                            <div className="font-medium flex items-center gap-2">
+                                                <Calendar className="h-4 w-4" />
+                                                {notification.title}
+                                            </div>
+                                            <div className="text-sm text-text-secondary">{notification.description}</div>
+                                            <div className="text-xs text-text-secondary">{notification.time}</div>
+                                        </DropdownMenuItem>
+                                    ))}
+                                    <DropdownMenuSeparator className="bg-border" />
+                                    <DropdownMenuItem className="text-center justify-center text-sm text-primary" asChild>
+                                        <a href="/calendar">View calendar</a>
+                                    </DropdownMenuItem>
+                                </>
+                            ) : (
+                                <div className="p-3 text-center text-muted-foreground">
+                                    No notifications at this time
+                                </div>
+                            )}
                         </DropdownMenuContent>
                     </DropdownMenu>
 
