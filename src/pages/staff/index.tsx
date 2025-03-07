@@ -118,6 +118,13 @@ const StaffPage = () => {
 		}
 	};
 
+	const formatJoinDate = (date: string | Date): string => {
+		if (date instanceof Date) {
+			return format(date, 'yyyy-MM-dd');
+		}
+		return date;
+	};
+
 	return (
 		<div className="p-6 max-w-7xl mx-auto space-y-6 animate-fadeIn">
 			<div className="flex justify-between items-center">
@@ -250,9 +257,7 @@ const StaffPage = () => {
 										<TableCell>{staff.email}</TableCell>
 										<TableCell>{staff.phone}</TableCell>
 										<TableCell>
-											{typeof staff.joinDate === 'string' 
-												? staff.joinDate 
-												: format(new Date(staff.joinDate), 'yyyy-MM-dd')}
+											{formatJoinDate(staff.joinDate)}
 										</TableCell>
 										<TableCell>
 											<span
@@ -269,7 +274,15 @@ const StaffPage = () => {
 													variant="ghost" 
 													size="sm" 
 													className="h-8 w-8 p-0"
-													onClick={() => setEditingStaff(staff)}>
+													onClick={() => {
+														const staffWithDateObject = {
+															...staff,
+															joinDate: typeof staff.joinDate === 'string' 
+																? new Date(staff.joinDate) 
+																: staff.joinDate
+														};
+														setEditingStaff(staffWithDateObject);
+													}}>
 													<svg
 														width="15"
 														height="15"

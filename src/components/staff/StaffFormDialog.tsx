@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
 	Dialog,
@@ -26,7 +27,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "sonner";
-import { addStaffMember, updateStaffMember } from "@/lib/firebase/staff";
+import { addStaffMember, updateStaffMember, StaffFormData as FirebaseStaffFormData } from "@/lib/firebase/staff";
 import ProfileImageUpload from "@/components/shared/ProfileImageUpload";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -51,6 +52,7 @@ const staffFormSchema = z.object({
 	profilePhotoUrl: z.string().optional(),
 });
 
+// Type definition for form data
 export type StaffFormData = z.infer<typeof staffFormSchema>;
 
 interface StaffFormDialogProps {
@@ -76,7 +78,7 @@ export function StaffFormDialog({
 			phone: initialData?.phone || "",
 			department: initialData?.department || "",
 			role: initialData?.role || "",
-			joinDate: initialData?.joinDate ? new Date(initialData.joinDate) : new Date(),
+			joinDate: initialData?.joinDate instanceof Date ? initialData.joinDate : new Date(),
 			status: initialData?.status || "active",
 			profilePhotoUrl: initialData?.profilePhotoUrl || "",
 		},
@@ -86,14 +88,13 @@ export function StaffFormDialog({
 		try {
 			setIsSubmitting(true);
 			
-			// Use data as is - the Firebase functions will handle Date conversion
 			if (initialData?.id) {
 				// Update existing staff member
 				await updateStaffMember(initialData.id, data);
 				toast.success("Staff details updated successfully");
 			} else {
 				// Add new staff member
-				await addStaffMember(data);
+				await addStaffMember(data as FirebaseStaffFormData);
 				toast.success("New staff member added successfully");
 			}
 			

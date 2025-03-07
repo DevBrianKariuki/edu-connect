@@ -8,13 +8,21 @@ export interface StaffFormData {
   phone: string;
   department: string;
   role: string;
-  joinDate: Date | string;
+  joinDate: Date;
   status: "active" | "inactive";
   profilePhotoUrl?: string;
 }
 
-export interface StaffMember extends StaffFormData {
+export interface StaffMember {
   id: string;
+  name: string;
+  email: string;
+  phone: string;
+  department: string;
+  role: string;
+  joinDate: string | Date; // Can be either string or Date depending on source
+  status: "active" | "inactive";
+  profilePhotoUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,7 +34,7 @@ export async function addStaffMember(data: StaffFormData): Promise<string> {
     // Ensure joinDate is converted to string if it's a Date object
     const staffData = {
       ...data,
-      // If joinDate is a Date, convert it to ISO string format
+      // Convert Date to ISO string format for storage
       joinDate: data.joinDate instanceof Date ? data.joinDate.toISOString().split('T')[0] : data.joinDate,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -44,11 +52,13 @@ export async function updateStaffMember(id: string, data: Partial<StaffFormData>
   try {
     const staffRef = doc(db, STAFF_COLLECTION, id);
     
-    // Ensure joinDate is converted to string if it's a Date object
+    // Prepare update data - handle Date conversion for joinDate if present
     const updatedData = {
       ...data,
-      // If joinDate is a Date, convert it to ISO string format
-      joinDate: data.joinDate instanceof Date ? data.joinDate.toISOString().split('T')[0] : data.joinDate,
+      // Only convert joinDate if it exists and is a Date
+      ...(data.joinDate && { 
+        joinDate: data.joinDate instanceof Date ? data.joinDate.toISOString().split('T')[0] : data.joinDate 
+      }),
       updatedAt: serverTimestamp()
     };
     
@@ -80,7 +90,7 @@ export async function getAllStaffMembers(): Promise<StaffMember[]> {
         phone: data.phone,
         department: data.department,
         role: data.role,
-        joinDate: data.joinDate,
+        joinDate: data.joinDate, // Keep as string from Firestore
         status: data.status as "active" | "inactive",
         profilePhotoUrl: data.profilePhotoUrl || "",
         createdAt: data.createdAt?.toDate() || new Date(),
