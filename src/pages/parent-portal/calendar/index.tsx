@@ -17,6 +17,7 @@ export default function ParentCalendarPage() {
     const fetchEvents = async () => {
         setIsLoading(true);
         try {
+            // Get all upcoming events without a limit
             const upcomingEvents = await getUpcomingEvents();
             setEvents(upcomingEvents);
             
@@ -76,7 +77,7 @@ export default function ParentCalendarPage() {
                         <CardHeader>
                             <CardTitle>Upcoming Events</CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="max-h-[400px] overflow-y-auto">
                             {isLoading ? (
                                 <UpcomingEventsSkeleton />
                             ) : events.length > 0 ? (

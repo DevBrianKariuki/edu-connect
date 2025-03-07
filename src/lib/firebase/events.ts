@@ -1,4 +1,3 @@
-
 import { 
   collection, 
   getDocs, 
@@ -9,7 +8,8 @@ import {
   query, 
   where, 
   Timestamp,
-  orderBy
+  orderBy,
+  limit as firestoreLimit
 } from "firebase/firestore";
 import { db } from "./config";
 
@@ -44,27 +44,30 @@ export async function getEvents(): Promise<Event[]> {
   }
 }
 
-export async function getUpcomingEvents(limit: number = 3): Promise<Event[]> {
+export async function getUpcomingEvents(limit?: number): Promise<Event[]> {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
     const eventsRef = collection(db, "events");
-    const q = query(
+    let q = query(
       eventsRef, 
       where("date", ">=", today),
       orderBy("date")
     );
+    
+    if (limit) {
+      q = query(q, firestoreLimit(limit));
+    }
+    
     const snapshot = await getDocs(q);
     
-    return snapshot.docs
-      .map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        date: doc.data().date?.toDate() || new Date(),
-        createdAt: doc.data().createdAt?.toDate() || new Date()
-      }))
-      .slice(0, limit) as Event[];
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      date: doc.data().date?.toDate() || new Date(),
+      createdAt: doc.data().createdAt?.toDate() || new Date()
+    })) as Event[];
   } catch (error) {
     console.error("Error getting upcoming events:", error);
     return [];
