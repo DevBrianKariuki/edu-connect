@@ -29,6 +29,11 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { addStaffMember, updateStaffMember } from "@/lib/firebase/staff";
 import ProfileImageUpload from "@/components/shared/ProfileImageUpload";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 const phoneRegex = /^\+?\d{10,15}$/;
 
@@ -40,7 +45,9 @@ const staffFormSchema = z.object({
 	}),
 	department: z.string().min(1, "Please select a department"),
 	role: z.string().min(1, "Please select a role"),
-	joinDate: z.string().min(1, "Join date is required"),
+	joinDate: z.date({
+		required_error: "Join date is required",
+	}),
 	status: z.enum(["active", "inactive"]),
 	profilePhotoUrl: z.string().optional(),
 });
@@ -70,8 +77,7 @@ export function StaffFormDialog({
 			phone: initialData?.phone || "",
 			department: initialData?.department || "",
 			role: initialData?.role || "",
-			joinDate:
-				initialData?.joinDate || new Date().toISOString().split("T")[0],
+			joinDate: initialData?.joinDate ? new Date(initialData.joinDate) : new Date(),
 			status: initialData?.status || "active",
 			profilePhotoUrl: initialData?.profilePhotoUrl || "",
 		},
@@ -81,17 +87,23 @@ export function StaffFormDialog({
 		try {
 			setIsSubmitting(true);
 			
+			// Convert the Date object to a string format for Firebase
+			const submissionData = {
+				...data,
+				joinDate: format(data.joinDate, "yyyy-MM-dd"),
+			};
+			
 			if (initialData?.id) {
 				// Update existing staff member
-				await updateStaffMember(initialData.id, data);
+				await updateStaffMember(initialData.id, submissionData);
 				toast.success("Staff details updated successfully");
 			} else {
 				// Add new staff member
-				await addStaffMember(data);
+				await addStaffMember(submissionData);
 				toast.success("New staff member added successfully");
 			}
 			
-			onSubmit(data);
+			onSubmit(submissionData);
 			form.reset();
 		} catch (error) {
 			console.error("Error submitting staff form:", error);
@@ -257,11 +269,37 @@ export function StaffFormDialog({
 								control={form.control}
 								name="joinDate"
 								render={({ field }) => (
-									<FormItem>
+									<FormItem className="flex flex-col">
 										<FormLabel>Join Date*</FormLabel>
-										<FormControl>
-											<Input type="date" {...field} />
-										</FormControl>
+										<Popover>
+											<PopoverTrigger asChild>
+												<FormControl>
+													<Button
+														variant="outline"
+														className={cn(
+															"w-full pl-3 text-left font-normal",
+															!field.value && "text-muted-foreground"
+														)}
+													>
+														{field.value ? (
+															format(field.value, "PPP")
+														) : (
+															<span>Pick a date</span>
+														)}
+														<CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+													</Button>
+												</FormControl>
+											</PopoverTrigger>
+											<PopoverContent className="w-auto p-0" align="start">
+												<Calendar
+													mode="single"
+													selected={field.value}
+													onSelect={field.onChange}
+													initialFocus
+													className={cn("p-3 pointer-events-auto")}
+												/>
+											</PopoverContent>
+										</Popover>
 										<FormMessage />
 									</FormItem>
 								)}
