@@ -334,7 +334,10 @@ const StaffPage = () => {
 					open={!!editingStaff}
 					onOpenChange={(open) => !open && setEditingStaff(null)}
 					onSubmit={handleEditStaff}
-					initialData={editingStaff}
+					initialData={{
+						...editingStaff,
+						joinDate: ensureDateObject(editingStaff.joinDate)
+					}}
 				/>
 			)}
 
