@@ -1,5 +1,4 @@
-
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
 	Dialog,
 	DialogContent,
@@ -87,23 +86,18 @@ export function StaffFormDialog({
 		try {
 			setIsSubmitting(true);
 			
-			// Convert the Date object to a string format for Firebase
-			const submissionData = {
-				...data,
-				joinDate: format(data.joinDate, "yyyy-MM-dd"),
-			};
-			
+			// Use data as is - the Firebase functions will handle Date conversion
 			if (initialData?.id) {
 				// Update existing staff member
-				await updateStaffMember(initialData.id, submissionData);
+				await updateStaffMember(initialData.id, data);
 				toast.success("Staff details updated successfully");
 			} else {
 				// Add new staff member
-				await addStaffMember(submissionData);
+				await addStaffMember(data);
 				toast.success("New staff member added successfully");
 			}
 			
-			onSubmit(submissionData);
+			onSubmit(data);
 			form.reset();
 		} catch (error) {
 			console.error("Error submitting staff form:", error);

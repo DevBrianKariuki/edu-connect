@@ -1,7 +1,17 @@
 
 import { collection, addDoc, getDocs, updateDoc, doc, deleteDoc, query, where, serverTimestamp, Timestamp } from "firebase/firestore";
 import { db } from "./config";
-import { StaffFormData } from "@/components/staff/StaffFormDialog";
+
+export interface StaffFormData {
+  name: string;
+  email: string;
+  phone: string;
+  department: string;
+  role: string;
+  joinDate: Date | string;
+  status: "active" | "inactive";
+  profilePhotoUrl?: string;
+}
 
 export interface StaffMember extends StaffFormData {
   id: string;
@@ -13,11 +23,16 @@ const STAFF_COLLECTION = "staff";
 
 export async function addStaffMember(data: StaffFormData): Promise<string> {
   try {
-    const docRef = await addDoc(collection(db, STAFF_COLLECTION), {
+    // Ensure joinDate is converted to string if it's a Date object
+    const staffData = {
       ...data,
+      // If joinDate is a Date, convert it to ISO string format
+      joinDate: data.joinDate instanceof Date ? data.joinDate.toISOString().split('T')[0] : data.joinDate,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
-    });
+    };
+    
+    const docRef = await addDoc(collection(db, STAFF_COLLECTION), staffData);
     return docRef.id;
   } catch (error) {
     console.error("Error adding staff member:", error);
@@ -28,10 +43,16 @@ export async function addStaffMember(data: StaffFormData): Promise<string> {
 export async function updateStaffMember(id: string, data: Partial<StaffFormData>): Promise<void> {
   try {
     const staffRef = doc(db, STAFF_COLLECTION, id);
-    await updateDoc(staffRef, {
+    
+    // Ensure joinDate is converted to string if it's a Date object
+    const updatedData = {
       ...data,
+      // If joinDate is a Date, convert it to ISO string format
+      joinDate: data.joinDate instanceof Date ? data.joinDate.toISOString().split('T')[0] : data.joinDate,
       updatedAt: serverTimestamp()
-    });
+    };
+    
+    await updateDoc(staffRef, updatedData);
   } catch (error) {
     console.error("Error updating staff member:", error);
     throw new Error("Failed to update staff member");

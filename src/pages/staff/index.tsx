@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import {
@@ -38,6 +37,7 @@ import {
 	StaffStatCardSkeleton, 
 	StaffTableSkeleton 
 } from "@/components/staff/StaffSkeletons";
+import { format } from "date-fns";
 
 const StaffPage = () => {
 	const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
@@ -57,14 +57,12 @@ const StaffPage = () => {
 		"Administration",
 	];
 
-	// Fetch staff data from Firebase
 	const fetchStaffData = async () => {
 		try {
 			setIsLoading(true);
 			const staff = await getAllStaffMembers();
 			setStaffMembers(staff);
 			
-			// Get department counts
 			const counts = await getStaffCountByDepartment();
 			setDepartmentCounts(counts);
 		} catch (error) {
@@ -75,7 +73,6 @@ const StaffPage = () => {
 		}
 	};
 
-	// Load staff data on component mount
 	useEffect(() => {
 		fetchStaffData();
 	}, []);
@@ -97,12 +94,12 @@ const StaffPage = () => {
 	};
 
 	const handleAddStaff = async (data: StaffFormData) => {
-		await fetchStaffData(); // Refresh the staff list
+		await fetchStaffData();
 		setShowAddStaffDialog(false);
 	};
 
 	const handleEditStaff = async (data: StaffFormData) => {
-		await fetchStaffData(); // Refresh the staff list
+		await fetchStaffData();
 		setEditingStaff(null);
 	};
 
@@ -112,7 +109,7 @@ const StaffPage = () => {
 		try {
 			await deleteStaffMember(staffToDelete.id);
 			toast.success("Staff member deleted successfully");
-			fetchStaffData(); // Refresh the staff list
+			fetchStaffData();
 		} catch (error) {
 			console.error("Error deleting staff member:", error);
 			toast.error("Failed to delete staff member");
@@ -252,7 +249,11 @@ const StaffPage = () => {
 										<TableCell>{staff.department}</TableCell>
 										<TableCell>{staff.email}</TableCell>
 										<TableCell>{staff.phone}</TableCell>
-										<TableCell>{staff.joinDate}</TableCell>
+										<TableCell>
+											{typeof staff.joinDate === 'string' 
+												? staff.joinDate 
+												: format(new Date(staff.joinDate), 'yyyy-MM-dd')}
+										</TableCell>
 										<TableCell>
 											<span
 												className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
