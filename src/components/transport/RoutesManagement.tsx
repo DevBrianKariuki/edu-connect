@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Table,
@@ -11,41 +11,69 @@ import {
 } from "@/components/ui/table";
 import { Plus } from "lucide-react";
 import RouteFormDialog from "./RouteFormDialog";
-
-interface Route {
-	id: string;
-	name: string;
-	startPoint: string;
-	endPoint: string;
-	stops: number;
-	assignedBus?: string;
-	assignedDriver?: string;
-	studentsCount: number;
-}
-
-const mockRoutes: Route[] = [
-	{
-		id: "1",
-		name: "Route A",
-		startPoint: "School",
-		endPoint: "Westlands",
-		stops: 5,
-		assignedBus: "KCB 123X",
-		assignedDriver: "John Doe",
-		studentsCount: 25,
-	},
-	{
-		id: "2",
-		name: "Route B",
-		startPoint: "School",
-		endPoint: "Kilimani",
-		stops: 4,
-		studentsCount: 18,
-	},
-];
+import { Route, getRoutes, addRoute } from "@/lib/firebase/transport";
+import { useToast } from "@/components/ui/use-toast";
 
 const RoutesManagement = () => {
 	const [showAddRouteDialog, setShowAddRouteDialog] = useState(false);
+	const [routes, setRoutes] = useState<Route[]>([]);
+	const [loading, setLoading] = useState(true);
+	const { toast } = useToast();
+
+	const fetchRoutes = async () => {
+		try {
+			setLoading(true);
+			const data = await getRoutes();
+			setRoutes(data);
+		} catch (error) {
+			console.error("Error fetching routes:", error);
+			toast({
+				title: "Error",
+				description: "Failed to load routes",
+				variant: "destructive",
+			});
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchRoutes();
+	}, [toast]);
+
+	const handleAddRoute = async (data: any) => {
+		try {
+			const routeData: Omit<Route, 'id' | 'createdAt'> = {
+				name: data.name,
+				startPoint: data.startPoint,
+				endPoint: data.endPoint,
+				stops: parseInt(data.stops, 10),
+				assignedBus: data.assignedBus || undefined,
+				assignedDriver: data.assignedDriver || undefined,
+				studentsCount: 0, // Default to 0 students
+			};
+
+			const routeId = await addRoute(routeData);
+			
+			if (routeId) {
+				toast({
+					title: "Success",
+					description: "Route added successfully",
+				});
+				setShowAddRouteDialog(false);
+				fetchRoutes(); // Refresh the list
+			} else {
+				throw new Error("Failed to add route");
+			}
+		} catch (error) {
+			console.error("Error adding route:", error);
+			toast({
+				title: "Error",
+				description: "Failed to add route",
+				variant: "destructive",
+			});
+		}
+	};
 
 	return (
 		<div className="space-y-4">
@@ -73,23 +101,37 @@ const RoutesManagement = () => {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{mockRoutes.map((route) => (
-							<TableRow key={route.id}>
-								<TableCell className="font-medium">
-									{route.name}
+						{loading ? (
+							<TableRow>
+								<TableCell colSpan={7} className="text-center py-4">
+									Loading routes...
 								</TableCell>
-								<TableCell>{route.startPoint}</TableCell>
-								<TableCell>{route.endPoint}</TableCell>
-								<TableCell>{route.stops} stops</TableCell>
-								<TableCell>
-									{route.assignedBus || "Not assigned"}
-								</TableCell>
-								<TableCell>
-									{route.assignedDriver || "Not assigned"}
-								</TableCell>
-								<TableCell>{route.studentsCount}</TableCell>
 							</TableRow>
-						))}
+						) : routes.length === 0 ? (
+							<TableRow>
+								<TableCell colSpan={7} className="text-center py-4">
+									No routes found. Add your first route.
+								</TableCell>
+							</TableRow>
+						) : (
+							routes.map((route) => (
+								<TableRow key={route.id}>
+									<TableCell className="font-medium">
+										{route.name}
+									</TableCell>
+									<TableCell>{route.startPoint}</TableCell>
+									<TableCell>{route.endPoint}</TableCell>
+									<TableCell>{route.stops} stops</TableCell>
+									<TableCell>
+										{route.assignedBus || "Not assigned"}
+									</TableCell>
+									<TableCell>
+										{route.assignedDriver || "Not assigned"}
+									</TableCell>
+									<TableCell>{route.studentsCount}</TableCell>
+								</TableRow>
+							))
+						)}
 					</TableBody>
 				</Table>
 			</div>
@@ -97,10 +139,7 @@ const RoutesManagement = () => {
 			<RouteFormDialog
 				open={showAddRouteDialog}
 				onOpenChange={setShowAddRouteDialog}
-				onSubmit={(data) => {
-					console.log("Adding route:", data);
-					setShowAddRouteDialog(false);
-				}}
+				onSubmit={handleAddRoute}
 			/>
 		</div>
 	);

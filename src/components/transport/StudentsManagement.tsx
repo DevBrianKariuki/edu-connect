@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Table,
@@ -21,41 +21,15 @@ import { Input } from "@/components/ui/input";
 import StudentTransportFormDialog from "./StudentTransportFormDialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/components/ui/use-toast";
-
-interface TransportStudent {
-	id: string;
-	name: string;
-	class: string;
-	route: string;
-	bus: string;
-	pickupPoint: string;
-	dropoffPoint: string;
-	guardianContact: string;
-	profilePic?: string;
-}
-
-const mockStudents: TransportStudent[] = [
-	{
-		id: "1",
-		name: "John Smith",
-		class: "Grade 7",
-		route: "Route A",
-		bus: "KCB 123X",
-		pickupPoint: "Westlands Mall",
-		dropoffPoint: "School",
-		guardianContact: "+254 712 345 678",
-	},
-	{
-		id: "2",
-		name: "Mary Johnson",
-		class: "Grade 5",
-		route: "Route B",
-		bus: "KDG 456Y",
-		pickupPoint: "Kilimani",
-		dropoffPoint: "School",
-		guardianContact: "+254 723 456 789",
-	},
-];
+import { 
+	TransportStudent, 
+	getTransportStudents, 
+	addTransportStudent,
+	Route,
+	getRoutes,
+	Bus,
+	getBuses
+} from "@/lib/firebase/transport";
 
 const StudentsManagement = () => {
 	const [showAddStudentDialog, setShowAddStudentDialog] = useState(false);
@@ -63,8 +37,38 @@ const StudentsManagement = () => {
 	const [selectedRoute, setSelectedRoute] = useState<string>("all-routes");
 	const [selectedBus, setSelectedBus] = useState<string>("all-buses");
 	const [searchQuery, setSearchQuery] = useState<string>("");
-	const [students, setStudents] = useState<TransportStudent[]>(mockStudents);
+	const [students, setStudents] = useState<TransportStudent[]>([]);
+	const [routes, setRoutes] = useState<Route[]>([]);
+	const [buses, setBuses] = useState<Bus[]>([]);
+	const [loading, setLoading] = useState(true);
 	const { toast } = useToast();
+
+	const fetchData = async () => {
+		try {
+			setLoading(true);
+			const [studentsData, routesData, busesData] = await Promise.all([
+				getTransportStudents(),
+				getRoutes(),
+				getBuses()
+			]);
+			setStudents(studentsData);
+			setRoutes(routesData);
+			setBuses(busesData);
+		} catch (error) {
+			console.error("Error fetching transport data:", error);
+			toast({
+				title: "Error",
+				description: "Failed to load transport data",
+				variant: "destructive",
+			});
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchData();
+	}, [toast]);
 
 	const filteredStudents = students.filter((student) => {
 		const matchesClass = selectedClass === "all-classes"
@@ -85,26 +89,39 @@ const StudentsManagement = () => {
 		return matchesClass && matchesRoute && matchesBus && matchesSearch;
 	});
 
-	const handleAddStudent = (data: any) => {
-		const newStudent: TransportStudent = {
-			id: (students.length + 1).toString(),
-			name: data.name,
-			class: data.class,
-			route: data.route,
-			bus: data.bus,
-			pickupPoint: data.pickupPoint,
-			dropoffPoint: data.dropoffPoint,
-			guardianContact: data.guardianContact,
-			profilePic: data.profilePic ? URL.createObjectURL(data.profilePic) : undefined,
-		};
-		
-		setStudents([...students, newStudent]);
-		setShowAddStudentDialog(false);
-		
-		toast({
-			title: "Success",
-			description: "Student added successfully",
-		});
+	const handleAddStudent = async (data: any) => {
+		try {
+			const studentData: Omit<TransportStudent, 'id' | 'createdAt'> = {
+				name: data.name,
+				class: data.class,
+				route: data.route,
+				bus: data.bus,
+				pickupPoint: data.pickupPoint,
+				dropoffPoint: data.dropoffPoint,
+				guardianContact: data.guardianContact,
+				profilePic: data.profilePic ? URL.createObjectURL(data.profilePic) : undefined,
+			};
+			
+			const studentId = await addTransportStudent(studentData);
+			
+			if (studentId) {
+				toast({
+					title: "Success",
+					description: "Student added successfully",
+				});
+				setShowAddStudentDialog(false);
+				fetchData(); // Refresh the list
+			} else {
+				throw new Error("Failed to add student");
+			}
+		} catch (error) {
+			console.error("Error adding student:", error);
+			toast({
+				title: "Error",
+				description: "Failed to add student",
+				variant: "destructive",
+			});
+		}
 	};
 
 	return (
@@ -152,8 +169,9 @@ const StudentsManagement = () => {
 						</SelectTrigger>
 						<SelectContent>
 							<SelectItem value="all-routes">All Routes</SelectItem>
-							<SelectItem value="Route A">Route A</SelectItem>
-							<SelectItem value="Route B">Route B</SelectItem>
+							{routes.map(route => (
+								<SelectItem key={route.id} value={route.name}>{route.name}</SelectItem>
+							))}
 						</SelectContent>
 					</Select>
 				</div>
@@ -164,8 +182,9 @@ const StudentsManagement = () => {
 						</SelectTrigger>
 						<SelectContent>
 							<SelectItem value="all-buses">All Buses</SelectItem>
-							<SelectItem value="KCB 123X">KCB 123X</SelectItem>
-							<SelectItem value="KDG 456Y">KDG 456Y</SelectItem>
+							{buses.map(bus => (
+								<SelectItem key={bus.id} value={bus.registrationNumber}>{bus.registrationNumber}</SelectItem>
+							))}
 						</SelectContent>
 					</Select>
 				</div>
@@ -185,30 +204,44 @@ const StudentsManagement = () => {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{filteredStudents.map((student) => (
-							<TableRow key={student.id}>
-								<TableCell className="font-medium">
-									<div className="flex items-center gap-3">
-										<Avatar>
-											{student.profilePic ? (
-												<AvatarImage src={student.profilePic} alt={student.name} />
-											) : (
-												<AvatarFallback>
-													{student.name.split(" ").map(n => n[0]).join("")}
-												</AvatarFallback>
-											)}
-										</Avatar>
-										<span>{student.name}</span>
-									</div>
+						{loading ? (
+							<TableRow>
+								<TableCell colSpan={7} className="text-center py-4">
+									Loading students...
 								</TableCell>
-								<TableCell>{student.class}</TableCell>
-								<TableCell>{student.route}</TableCell>
-								<TableCell>{student.bus}</TableCell>
-								<TableCell>{student.pickupPoint}</TableCell>
-								<TableCell>{student.dropoffPoint}</TableCell>
-								<TableCell>{student.guardianContact}</TableCell>
 							</TableRow>
-						))}
+						) : filteredStudents.length === 0 ? (
+							<TableRow>
+								<TableCell colSpan={7} className="text-center py-4">
+									No students found. Add your first transport student.
+								</TableCell>
+							</TableRow>
+						) : (
+							filteredStudents.map((student) => (
+								<TableRow key={student.id}>
+									<TableCell className="font-medium">
+										<div className="flex items-center gap-3">
+											<Avatar>
+												{student.profilePic ? (
+													<AvatarImage src={student.profilePic} alt={student.name} />
+												) : (
+													<AvatarFallback>
+														{student.name.split(" ").map(n => n[0]).join("")}
+													</AvatarFallback>
+												)}
+											</Avatar>
+											<span>{student.name}</span>
+										</div>
+									</TableCell>
+									<TableCell>{student.class}</TableCell>
+									<TableCell>{student.route}</TableCell>
+									<TableCell>{student.bus}</TableCell>
+									<TableCell>{student.pickupPoint}</TableCell>
+									<TableCell>{student.dropoffPoint}</TableCell>
+									<TableCell>{student.guardianContact}</TableCell>
+								</TableRow>
+							))
+						)}
 					</TableBody>
 				</Table>
 			</div>

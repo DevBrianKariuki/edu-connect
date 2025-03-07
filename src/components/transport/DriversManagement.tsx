@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Table,
@@ -11,43 +11,73 @@ import {
 } from "@/components/ui/table";
 import { Plus } from "lucide-react";
 import DriverFormDialog from "./DriverFormDialog";
-
-interface Driver {
-	id: string;
-	name: string;
-	licenseNumber: string;
-	phone: string;
-	status: "on duty" | "off duty";
-	assignedBus?: string;
-	assignedRoute?: string;
-}
-
-const mockDrivers: Driver[] = [
-	{
-		id: "1",
-		name: "John Doe",
-		licenseNumber: "DL123456",
-		phone: "+254 712 345 678",
-		status: "on duty",
-		assignedBus: "KCB 123X",
-		assignedRoute: "Route A",
-	},
-	{
-		id: "2",
-		name: "Jane Smith",
-		licenseNumber: "DL789012",
-		phone: "+254 723 456 789",
-		status: "off duty",
-	},
-];
+import { Driver, getDrivers, addDriver } from "@/lib/firebase/transport";
+import { useToast } from "@/components/ui/use-toast";
 
 const DriversManagement = () => {
 	const [showAddDriverDialog, setShowAddDriverDialog] = useState(false);
+	const [drivers, setDrivers] = useState<Driver[]>([]);
+	const [loading, setLoading] = useState(true);
+	const { toast } = useToast();
+
+	const fetchDrivers = async () => {
+		try {
+			setLoading(true);
+			const data = await getDrivers();
+			setDrivers(data);
+		} catch (error) {
+			console.error("Error fetching drivers:", error);
+			toast({
+				title: "Error",
+				description: "Failed to load drivers",
+				variant: "destructive",
+			});
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchDrivers();
+	}, [toast]);
 
 	const getStatusColor = (status: string) => {
 		return status === "on duty"
 			? "bg-green-100 text-green-800"
 			: "bg-red-100 text-red-800";
+	};
+
+	const handleAddDriver = async (data: any) => {
+		try {
+			const driverData: Omit<Driver, 'id' | 'createdAt'> = {
+				name: data.name,
+				licenseNumber: data.licenseNumber,
+				phone: data.phone,
+				status: data.status,
+				assignedBus: data.assignedBus || undefined,
+				assignedRoute: data.assignedRoute || undefined,
+			};
+
+			const driverId = await addDriver(driverData);
+			
+			if (driverId) {
+				toast({
+					title: "Success",
+					description: "Driver added successfully",
+				});
+				setShowAddDriverDialog(false);
+				fetchDrivers(); // Refresh the list
+			} else {
+				throw new Error("Failed to add driver");
+			}
+		} catch (error) {
+			console.error("Error adding driver:", error);
+			toast({
+				title: "Error",
+				description: "Failed to add driver",
+				variant: "destructive",
+			});
+		}
 	};
 
 	return (
@@ -75,30 +105,44 @@ const DriversManagement = () => {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{mockDrivers.map((driver) => (
-							<TableRow key={driver.id}>
-								<TableCell className="font-medium">
-									{driver.name}
-								</TableCell>
-								<TableCell>{driver.licenseNumber}</TableCell>
-								<TableCell>{driver.phone}</TableCell>
-								<TableCell>
-									<span
-										className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-											driver.status
-										)}`}>
-										{driver.status.charAt(0).toUpperCase() +
-											driver.status.slice(1)}
-									</span>
-								</TableCell>
-								<TableCell>
-									{driver.assignedBus || "Not assigned"}
-								</TableCell>
-								<TableCell>
-									{driver.assignedRoute || "Not assigned"}
+						{loading ? (
+							<TableRow>
+								<TableCell colSpan={6} className="text-center py-4">
+									Loading drivers...
 								</TableCell>
 							</TableRow>
-						))}
+						) : drivers.length === 0 ? (
+							<TableRow>
+								<TableCell colSpan={6} className="text-center py-4">
+									No drivers found. Add your first driver.
+								</TableCell>
+							</TableRow>
+						) : (
+							drivers.map((driver) => (
+								<TableRow key={driver.id}>
+									<TableCell className="font-medium">
+										{driver.name}
+									</TableCell>
+									<TableCell>{driver.licenseNumber}</TableCell>
+									<TableCell>{driver.phone}</TableCell>
+									<TableCell>
+										<span
+											className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+												driver.status
+											)}`}>
+											{driver.status.charAt(0).toUpperCase() +
+												driver.status.slice(1)}
+										</span>
+									</TableCell>
+									<TableCell>
+										{driver.assignedBus || "Not assigned"}
+									</TableCell>
+									<TableCell>
+										{driver.assignedRoute || "Not assigned"}
+									</TableCell>
+								</TableRow>
+							))
+						)}
 					</TableBody>
 				</Table>
 			</div>
@@ -106,10 +150,7 @@ const DriversManagement = () => {
 			<DriverFormDialog
 				open={showAddDriverDialog}
 				onOpenChange={setShowAddDriverDialog}
-				onSubmit={(data) => {
-					console.log("Adding driver:", data);
-					setShowAddDriverDialog(false);
-				}}
+				onSubmit={handleAddDriver}
 			/>
 		</div>
 	);
