@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import {
@@ -123,6 +124,14 @@ const StaffPage = () => {
 			return format(date, 'yyyy-MM-dd');
 		}
 		return date;
+	};
+
+	// Helper function to convert string date to Date object
+	const ensureDateObject = (date: string | Date): Date => {
+		if (date instanceof Date) {
+			return date;
+		}
+		return new Date(date);
 	};
 
 	return (
@@ -275,13 +284,12 @@ const StaffPage = () => {
 													size="sm" 
 													className="h-8 w-8 p-0"
 													onClick={() => {
-														const staffWithDateObject = {
+														// Convert staff data for the form dialog
+														const staffDataForEdit = {
 															...staff,
-															joinDate: typeof staff.joinDate === 'string' 
-																? new Date(staff.joinDate) 
-																: staff.joinDate
+															joinDate: ensureDateObject(staff.joinDate)
 														};
-														setEditingStaff(staffWithDateObject);
+														setEditingStaff(staffDataForEdit);
 													}}>
 													<svg
 														width="15"
