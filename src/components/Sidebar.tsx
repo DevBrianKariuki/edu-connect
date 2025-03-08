@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -33,7 +32,7 @@ const NavItem = ({ icon: Icon, label, to, isActive }: NavItemProps) => (
         className={cn(
             "flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300",
             isActive
-                ? "bg-primary text-primary-foreground"
+                ? "bg-primary-dark text-primary-foreground"
                 : "text-muted-foreground hover:bg-accent"
         )}>
         <Icon size={20} />
@@ -42,7 +41,7 @@ const NavItem = ({ icon: Icon, label, to, isActive }: NavItemProps) => (
 );
 
 const navItems = [
-    { icon: Home, label: "Dashboard", path: "/" },
+    { icon: Home, label: "Dashboard", path: "/dashboard" },
     { icon: Users, label: "Students", path: "/students" },
     { icon: Users, label: "Staff", path: "/staff" },
     { icon: Calendar, label: "Calendar", path: "/calendar" },
@@ -86,7 +85,11 @@ const Sidebar = () => {
                         icon={item.icon}
                         label={item.label}
                         to={item.path}
-                        isActive={location.pathname === item.path}
+                        isActive={
+                            item.path === "/"
+                                ? location.pathname === item.path
+                                : location.pathname.startsWith(item.path)
+                        }
                     />
                 ))}
             </nav>
@@ -97,7 +100,7 @@ const Sidebar = () => {
                     className="w-full justify-start space-x-3 text-red-500 hover:text-red-600 hover:bg-red-50"
                     onClick={handleLogout}>
                     <LogOut size={20} />
-                    <span className="font-medium">Logout</span>
+                    <span className="font-medium">Sign Out</span>
                 </Button>
             </div>
         </>

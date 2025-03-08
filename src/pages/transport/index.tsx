@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -53,6 +52,13 @@ const TransportPage = () => {
 		fetchTransportData();
 	}, [toast]);
 
+	const renderSkeleton = () => (
+		<div className="animate-pulse">
+			<div className="bg-gray-500 h-8 w-16 rounded-md"></div>
+			<div className="bg-gray-500 h-4 w-24 rounded-md mt-2"></div>
+		</div>
+	);
+
 	return (
 		<div className="p-6 max-w-7xl mx-auto space-y-6 animate-fadeIn">
 			<div className="flex justify-between items-center">
@@ -62,23 +68,39 @@ const TransportPage = () => {
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 				<div className="bg-card p-6 rounded-lg shadow">
 					<h3 className="text-lg font-semibold mb-2">Total Buses</h3>
-					<p className="text-3xl font-bold">{loading ? "-" : busCount}</p>
-					<p className="text-sm text-muted-foreground">Active Fleet</p>
+					{loading ? renderSkeleton() : (
+						<>
+							<p className="text-3xl font-bold">{busCount}</p>
+							<p className="text-sm text-muted-foreground">Active Fleet</p>
+						</>
+					)}
 				</div>
 				<div className="bg-card p-6 rounded-lg shadow">
 					<h3 className="text-lg font-semibold mb-2">Drivers</h3>
-					<p className="text-3xl font-bold">{loading ? "-" : driverCount}</p>
-					<p className="text-sm text-muted-foreground">On Duty</p>
+					{loading ? renderSkeleton() : (
+						<>
+							<p className="text-3xl font-bold">{driverCount}</p>
+							<p className="text-sm text-muted-foreground">On Duty</p>
+						</>
+					)}
 				</div>
 				<div className="bg-card p-6 rounded-lg shadow">
 					<h3 className="text-lg font-semibold mb-2">Routes</h3>
-					<p className="text-3xl font-bold">{loading ? "-" : routeCount}</p>
-					<p className="text-sm text-muted-foreground">Active Routes</p>
+					{loading ? renderSkeleton() : (
+						<>
+							<p className="text-3xl font-bold">{routeCount}</p>
+							<p className="text-sm text-muted-foreground">Active Routes</p>
+						</>
+					)}
 				</div>
 				<div className="bg-card p-6 rounded-lg shadow">
 					<h3 className="text-lg font-semibold mb-2">Students</h3>
-					<p className="text-3xl font-bold">{loading ? "-" : studentCount}</p>
-					<p className="text-sm text-muted-foreground">Using Transport</p>
+					{loading ? renderSkeleton() : (
+						<>
+							<p className="text-3xl font-bold">{studentCount}</p>
+							<p className="text-sm text-muted-foreground">Using Transport</p>
+						</>
+					)}
 				</div>
 			</div>
 
@@ -92,7 +114,7 @@ const TransportPage = () => {
 					</TabsTrigger>
 					<TabsTrigger 
 						value="drivers"
-						className={activeTab === "drivers" ? "bg-[#8B5CF6] text-white" : ""}
+						className={activeTab === "drivers" ? "bg-[#fff] text-white" : ""}
 					>
 						Drivers
 					</TabsTrigger>

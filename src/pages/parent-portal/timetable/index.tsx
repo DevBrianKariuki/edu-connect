@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
     Card,
@@ -24,6 +23,7 @@ const subjects = [
     { id: 3, name: "Science", teacher: "Dr. Bob Wilson", grade: "Grade 8" },
     { id: 4, name: "History", teacher: "Ms. Sarah Brown", grade: "Grade 8" },
     { id: 5, name: "Geography", teacher: "Mr. Mike Johnson", grade: "Grade 8" },
+    { id: 6, name: "Art", teacher: "Ms. Emily Clark", grade: "Grade 8" },
 ];
 
 const timetable = {
@@ -56,6 +56,7 @@ const timetable = {
         { time: "9:00 AM - 10:00 AM", subject: "Science" },
         { time: "10:30 AM - 11:30 AM", subject: "History" },
         { time: "11:30 AM - 12:30 PM", subject: "Geography" },
+        { time: "1:00 PM - 2:00 PM", subject: "Art" },
     ],
 };
 
@@ -66,6 +67,7 @@ const subjectColors: { [key: string]: string } = {
     Science: "bg-purple-50 border-purple-200",
     History: "bg-orange-50 border-orange-200",
     Geography: "bg-pink-50 border-pink-200",
+    Art: "bg-yellow-50 border-yellow-200",
 };
 
 const TimetablePage = () => {

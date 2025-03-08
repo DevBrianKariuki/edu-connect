@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -23,7 +22,7 @@ export default {
         primary: {
           DEFAULT: "var(--primary)",
           light: "var(--primary-light)",
-          dark: "var(--primary-dark)",
+          // dark: "#1a202c", // Define a darker color for primary-dark
         },
         secondary: {
           DEFAULT: "var(--secondary)",
